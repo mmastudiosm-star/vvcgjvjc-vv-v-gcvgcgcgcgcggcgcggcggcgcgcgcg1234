@@ -7,158 +7,187 @@
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --bg: #050810; 
-            --card-bg: #0f1525; 
-            --text: #f0f4f8; 
-            --text-muted: #8b9bb4;
-            --accent: #3b82f6; 
-            --danger: #ef4444; 
-            --success: #10b981;
+            --bg: #050810; --card-bg: #0f1525; --text: #f0f4f8; --text-muted: #8b9bb4;
+            --accent: #3b82f6; --danger: #ef4444; --success: #10b981; --gold: #f59e0b;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: 'Vazirmatn', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-start; 
-            min-height: 100vh; 
-            padding: 40px 20px;
-        }
-        .container { width: 100%; max-width: 600px; }
-        .card { 
-            background: var(--card-bg); 
-            border-radius: 16px; 
-            padding: 30px; 
-            border: 1px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            margin-bottom: 20px;
-        }
-        h1 { text-align: center; margin-bottom: 30px; color: var(--accent); font-size: 1.5rem; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: var(--text-muted); }
-        input[type="text"], input[type="password"], textarea { 
-            width: 100%; padding: 12px; border-radius: 8px; 
-            border: 1px solid rgba(255,255,255,0.2); 
-            background: rgba(0,0,0,0.3); color: var(--text); 
-            font-family: inherit; font-size: 1rem; transition: 0.3s;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        textarea { min-height: 150px; resize: vertical; }
-        button { 
-            width: 100%; padding: 14px; border: none; border-radius: 8px; 
-            background: var(--accent); color: #fff; font-weight: 700; 
-            font-family: inherit; font-size: 1rem; cursor: pointer; transition: 0.3s; 
-        }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .btn-danger { background: var(--danger); margin-top: 15px; }
+        body { font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
         .hidden { display: none !important; }
         
-        .toast { 
-            position: fixed; bottom: 20px; right: 20px; 
-            background: var(--card-bg); border: 1px solid var(--accent); 
-            padding: 15px 25px; border-radius: 10px; color: var(--text); 
-            font-weight: 700; z-index: 1000; animation: slideIn 0.3s;
-            max-width: 90vw;
-        }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        /* استایل آپلود عکس */
-        .upload-zone {
-            display: block; border: 2px dashed rgba(255,255,255,0.2);
-            border-radius: 8px; padding: 20px; text-align: center;
-            cursor: pointer; transition: 0.25s; background: rgba(0,0,0,0.2);
-        }
-        .upload-zone:hover { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+        /* استایل‌های صفحه ورود */
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .login-card { width: 100%; max-width: 400px; }
+        
+        /* استایل‌های پنل اصلی */
+        .admin-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-bg); padding: 15px 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); }
+        .header h1 { font-size: 1.2rem; color: var(--accent); }
+        
+        /* منو (تب‌ها) */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; transition: 0.3s; }
+        .tab-btn.active { background: var(--accent); border-color: var(--accent); }
+        
+        /* فرم‌ها */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: var(--text-muted); }
+        input, textarea, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: var(--text); font-family: inherit; font-size: 1rem; }
+        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+        textarea { min-height: 120px; resize: vertical; }
+        
+        /* دکمه‌ها */
+        button { padding: 12px 20px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 700; font-family: inherit; font-size: 1rem; cursor: pointer; transition: 0.3s; }
+        button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-danger { background: var(--danger); }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+        
+        /* آپلود عکس */
+        .upload-zone { display: block; border: 2px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; background: rgba(0,0,0,0.2); }
+        .upload-zone:hover { border-color: var(--accent); }
         #imgPreview { display: none; align-items: center; gap: 10px; margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; }
         #imgPreview img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+
+        /* داشبورد */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .stat-box { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        .stat-box h3 { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; }
+        .stat-box .value { font-size: 2rem; font-weight: 900; color: var(--accent); }
+
+        /* جدول اخبار */
+        .table-container { overflow-x: auto; background: var(--card-bg); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        table { width: 100%; border-collapse: collapse; text-align: right; }
+        th, td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { background: rgba(0,0,0,0.3); color: var(--accent); font-weight: 700; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* پیام (توست) */
+        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--card-bg); border: 1px solid var(--accent); padding: 15px 25px; border-radius: 10px; font-weight: 700; z-index: 1000; animation: slideIn 0.3s; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- ۱. بخش ورود -->
-    <div id="loginSection" class="card">
-        <h1>🔐 ورود به پنل مدیریت</h1>
-        <form id="loginForm">
-            <div class="form-group">
-                <label>رمز عبور مدیریت:</label>
-                <input type="password" id="adminPassword" placeholder="رمز را وارد کنید..." required>
-            </div>
-            <button type="submit" id="loginBtn">ورود به پنل</button>
-        </form>
+    <!-- ==================== صفحه ورود ==================== -->
+    <div id="loginSection" class="login-container">
+        <div class="card login-card">
+            <h1 style="text-align: center; margin-bottom: 25px; color: var(--accent);">🔐 ورود به پنل مدیریت</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>رمز عبور مدیریت:</label>
+                    <input type="password" id="adminPassword" placeholder="رمز را وارد کنید..." required>
+                </div>
+                <button type="submit" id="loginBtn" style="width: 100%;">ورود به پنل</button>
+            </form>
+        </div>
     </div>
 
-    <!-- ۲. بخش پنل ادمین (بعد از ورود) -->
-    <div id="adminSection" class="card hidden">
-        <h1>📰 ثبت خبر جدید</h1>
-        <form id="addNewsForm">
-            <div class="form-group">
-                <label>عنوان خبر *</label>
-                <input type="text" id="newsTitle" required>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="form-group">
-                    <label>منبع</label>
-                    <input type="text" id="newsSource" value="خبر دستی">
+    <!-- ==================== پنل اصلی ==================== -->
+    <div id="adminSection" class="admin-container hidden">
+        <div class="header">
+            <h1>📊 مدیریت Lreporter</h1>
+            <button id="logoutBtn" class="btn-danger btn-sm">خروج از حساب</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="dash">📈 داشبورد</button>
+            <button class="tab-btn" data-tab="add">➕ ثبت خبر جدید</button>
+            <button class="tab-btn" data-tab="list">📋 لیست اخبار</button>
+        </div>
+
+        <!-- تب ۱: داشبورد -->
+        <div id="tab-dash" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <h3>کل اخبار سایت</h3>
+                    <div class="value" id="dashTotalNews">0</div>
                 </div>
-                <div class="form-group">
-                    <label>دسته بندی</label>
-                    <select id="newsCategory" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: var(--text); font-family: inherit;">
-                        <option>عمومی</option>
-                        <option>سیاسی</option>
-                        <option>اقتصاد</option>
-                        <option>ورزش</option>
-                        <option>فناوری</option>
-                        <option>سلامت</option>
-                        <option>فرهنگ</option>
-                        <option>حوادث</option>
-                    </select>
+                <div class="stat-box">
+                    <h3>اخبار دستی ثبت‌شده</h3>
+                    <div class="value" id="dashManualNews">0</div>
                 </div>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label>عکس خبر (اختیاری)</label>
-                <label for="imageFile" class="upload-zone" id="uploadZone">
-                    <input type="file" id="imageFile" accept="image/*" hidden>
-                    <span style="font-size: 1.5rem;">📸</span>
-                    <div style="font-size: 0.9rem; margin-top: 5px;">برای انتخاب عکس کلیک کنید</div>
-                </label>
-                <div id="imgPreview">
-                    <img id="imgPreviewTag" alt="پیش‌نمایش">
-                    <div style="flex: 1; font-size: 0.8rem;" id="imgSizeInfo"></div>
-                    <button type="button" id="removeImgBtn" style="width: auto; padding: 5px 10px; background: var(--danger); font-size: 0.8rem;">حذف</button>
-                </div>
+        <!-- تب ۲: ثبت خبر -->
+        <div id="tab-add" class="tab-content hidden">
+            <div class="card">
+                <form id="addNewsForm">
+                    <div class="form-group">
+                        <label>عنوان خبر *</label>
+                        <input type="text" id="newsTitle" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <label>منبع</label>
+                            <input type="text" id="newsSource" value="خبر دستی">
+                        </div>
+                        <div class="form-group">
+                            <label>دسته بندی</label>
+                            <select id="newsCategory">
+                                <option>عمومی</option><option>سیاسی</option><option>اقتصاد</option>
+                                <option>ورزش</option><option>فناوری</option><option>سلامت</option>
+                                <option>فرهنگ</option><option>حوادث</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>عکس خبر (اختیاری)</label>
+                        <label for="imageFile" class="upload-zone" id="uploadZone">
+                            <input type="file" id="imageFile" accept="image/*" hidden>
+                            <span style="font-size: 1.5rem;">📸</span>
+                            <div style="font-size: 0.9rem; margin-top: 5px;">برای انتخاب عکس کلیک کنید</div>
+                        </label>
+                        <div id="imgPreview">
+                            <img id="imgPreviewTag" alt="پیش‌نمایش">
+                            <div style="flex: 1; font-size: 0.8rem;" id="imgSizeInfo"></div>
+                            <button type="button" id="removeImgBtn" class="btn-danger btn-sm">حذف</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>متن خبر *</label>
+                        <textarea id="newsContent" required></textarea>
+                    </div>
+                    <button type="submit" id="submitBtn" style="width: 100%;">ثبت و انتشار خبر</button>
+                </form>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label>متن خبر *</label>
-                <textarea id="newsContent" required></textarea>
+        <!-- تب ۳: لیست اخبار -->
+        <div id="tab-list" class="tab-content hidden">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>عنوان</th>
+                            <th>منبع</th>
+                            <th>تاریخ</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="newsTableBody">
+                        <tr><td colspan="4" style="text-align: center;">در حال بارگذاری...</td></tr>
+                    </tbody>
+                </table>
             </div>
-
-            <button type="submit" id="submitBtn">ثبت و انتشار خبر</button>
-        </form>
-        
-        <button id="logoutBtn" class="btn-danger">خروج از حساب</button>
+        </div>
     </div>
-</div>
 
 <script>
     // ==========================================
-    // ⚠️ تنظیمات اتصال به سرور (از قبل پر شده)
+    // ⚠️ تنظیمات
     // ==========================================
     const SUPABASE_ANON_KEY = 'sb_publishable_OsUd9T9GvvY6rvyycxlQSA_xFazoXBe'; 
     const BASE_URL = 'https://kemwkxuwhqgqqfyfpbmm.supabase.co/functions/v1';
     const ADMIN_LOGIN_URL = `${BASE_URL}/admin-login`;
     const MANUAL_NEWS_URL = `${BASE_URL}/manual-news`;
+    const SUPABASE_FETCH_URL = `${BASE_URL}/rapid-processor`; // برای آمار کل اخبار
 
     let adminToken = null;
     let anImageBase64 = '';
 
-    // تابع نمایش پیام
+    // توست (پیام)
     function showToast(msg, isError = false) {
         const toast = document.createElement('div');
         toast.className = 'toast';
@@ -172,44 +201,50 @@
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('loginBtn');
-        const pass = document.getElementById('adminPassword').value;
-        btn.textContent = 'در حال بررسی...';
-        btn.disabled = true;
-
+        btn.textContent = 'در حال بررسی...'; btn.disabled = true;
         try {
             const res = await fetch(ADMIN_LOGIN_URL, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'apikey': SUPABASE_ANON_KEY
-                },
-                body: JSON.stringify({ password: pass })
+                headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+                body: JSON.stringify({ password: document.getElementById('adminPassword').value })
             });
-
             const data = await res.json();
-
             if (!res.ok) throw new Error(data.error || 'رمز عبور اشتباه است');
-
-            // ورود موفق
+            
             adminToken = data.token;
             showToast('✅ ورود موفق!');
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('adminSection').classList.remove('hidden');
-            document.getElementById('adminPassword').value = ''; // پاک کردن رمز
-
+            document.getElementById('adminPassword').value = '';
+            
+            // لود کردن اطلاعات اولیه
+            loadDashboard();
+            loadNewsList();
         } catch (error) {
             showToast('❌ ' + error.message, true);
         } finally {
-            btn.textContent = 'ورود به پنل';
-            btn.disabled = false;
+            btn.textContent = 'ورود به پنل'; btn.disabled = false;
         }
     });
 
-    // --- ۲. آپلود و فشرده‌سازی عکس ---
+    // --- ۲. سیستم تب‌ها (منو) ---
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+            
+            // رفرش کردن تب‌ها هنگام کلیک
+            if (btn.dataset.tab === 'list') loadNewsList();
+            if (btn.dataset.tab === 'dash') loadDashboard();
+        });
+    });
+
+    // --- ۳. آپلود و فشرده‌سازی عکس ---
     document.getElementById('imageFile').addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         const zone = document.getElementById('uploadZone');
         const originalHTML = zone.innerHTML;
         zone.innerHTML = '<div style="padding: 10px;">⏳ در حال پردازش...</div>';
@@ -217,18 +252,13 @@
         try {
             const base64 = await compressImage(file);
             anImageBase64 = base64;
-            
             document.getElementById('imgPreviewTag').src = base64;
             document.getElementById('imgPreview').style.display = 'flex';
             zone.style.display = 'none';
-            
-            const bytes = Math.round(base64.length * 0.75);
-            document.getElementById('imgSizeInfo').textContent = `حجم: ${(bytes / 1024).toFixed(0)} کیلوبایت`;
-
+            document.getElementById('imgSizeInfo').textContent = `حجم: ${(Math.round(base64.length * 0.75) / 1024).toFixed(0)} KB`;
         } catch (err) {
             showToast('❌ ' + err.message, true);
-            zone.innerHTML = originalHTML;
-            e.target.value = '';
+            zone.innerHTML = originalHTML; e.target.value = '';
         }
     });
 
@@ -260,62 +290,117 @@
         document.getElementById('imageFile').value = '';
     });
 
-    // --- ۳. ثبت خبر ---
+    // --- ۴. ثبت خبر ---
     document.getElementById('addNewsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!adminToken) return showToast('نشست منقضی شده است', true);
         
-        if (!adminToken) {
-            showToast('نشست شما منقضی شده است. دوباره وارد شوید.', true);
-            return;
-        }
-
         const btn = document.getElementById('submitBtn');
-        btn.textContent = '⏳ در حال ثبت...';
-        btn.disabled = true;
+        btn.textContent = '⏳ در حال ثبت...'; btn.disabled = true;
 
         const payload = {
             title: document.getElementById('newsTitle').value.trim(),
             source: document.getElementById('newsSource').value.trim(),
             category: document.getElementById('newsCategory').value,
             content: document.getElementById('newsContent').value.trim(),
-            image: anImageBase64,
-            published: true
+            image: anImageBase64, published: true
         };
 
         try {
             const res = await fetch(MANUAL_NEWS_URL, {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${adminToken}` // ارسال توکن امنیتی
+                    'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${adminToken}`
                 },
                 body: JSON.stringify(payload)
             });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || 'خطا در ثبت خبر');
-            }
-
-            showToast('✅ خبر با موفقیت ثبت شد!');
+            if (!res.ok) throw new Error('خطا در ثبت خبر');
             
-            // پاک کردن فرم
+            showToast('✅ خبر با موفقیت ثبت شد!');
             document.getElementById('addNewsForm').reset();
-            document.getElementById('removeImgBtn').click(); // پاک کردن عکس
-
+            document.getElementById('removeImgBtn').click();
+            loadDashboard(); // آپدیت آمار
         } catch (error) {
             showToast('❌ ' + error.message, true);
         } finally {
-            btn.textContent = 'ثبت و انتشار خبر';
-            btn.disabled = false;
+            btn.textContent = 'ثبت و انتشار خبر'; btn.disabled = false;
         }
     });
 
-    // --- ۴. خروج ---
+    // --- ۵. دریافت لیست اخبار (برای تب لیست و داشبورد) ---
+    async function loadNewsList() {
+        const tbody = document.getElementById('newsTableBody');
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">در حال بارگذاری...</td></tr>';
+        
+        try {
+            const res = await fetch(`${MANUAL_NEWS_URL}?all=1`, {
+                headers: { 'apikey': SUPABASE_ANON_KEY }
+            });
+            if (!res.ok) throw new Error('خطا در دریافت لیست');
+            const data = await res.json();
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">هیچ خبر دستی یافت نشد.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(n => `
+                <tr>
+                    <td style="font-weight: 700;">${n.title}</td>
+                    <td>${n.source || 'خبر دستی'}</td>
+                    <td>${n.date ? new Date(n.date).toLocaleDateString('fa-IR') : '—'}</td>
+                    <td><button class="btn-danger btn-sm" onclick="deleteNews('${n._id || n.id}')">حذف</button></td>
+                </tr>
+            `).join('');
+            
+            // آپدیت تعداد در داشبورد
+            document.getElementById('dashManualNews').textContent = data.length.toLocaleString('fa-IR');
+
+        } catch (error) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--danger);">${error.message}</td></tr>`;
+        }
+    }
+
+    // --- ۶. حذف خبر ---
+    async function deleteNews(id) {
+        if (!id) return showToast('شناسه نامعتبر', true);
+        if (!confirm('آیا از حذف این خبر مطمئن هستید؟')) return;
+
+        try {
+            const res = await fetch(`${MANUAL_NEWS_URL}?id=${id}`, {
+                method: 'DELETE',
+                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` }
+            });
+            if (!res.ok) throw new Error('خطا در حذف');
+            showToast('🗑 خبر با موفقیت حذف شد');
+            loadNewsList();
+        } catch (error) {
+            showToast('❌ ' + error.message, true);
+        }
+    }
+
+    // --- ۷. آمار کل اخبار ---
+    async function loadDashboard() {
+        try {
+            // گرفتن کل اخبار سایت
+            const res = await fetch(SUPABASE_FETCH_URL, { headers: { 'apikey': SUPABASE_ANON_KEY } });
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('dashTotalNews').textContent = (data.length || 0).toLocaleString('fa-IR');
+            }
+            // گرفتن تعداد اخبار دستی
+            const res2 = await fetch(`${MANUAL_NEWS_URL}?all=1`, { headers: { 'apikey': SUPABASE_ANON_KEY } });
+            if (res2.ok) {
+                const data2 = await res2.json();
+                document.getElementById('dashManualNews').textContent = (data2.length || 0).toLocaleString('fa-IR');
+            }
+        } catch (e) { console.log('Error loading dashboard', e); }
+    }
+
+    // --- ۸. خروج ---
     document.getElementById('logoutBtn').addEventListener('click', () => {
         adminToken = null;
-        document.getElementById('adminPassword').value = '';
         document.getElementById('loginSection').classList.remove('hidden');
         document.getElementById('adminSection').classList.add('hidden');
         showToast('از حساب خارج شدید');
