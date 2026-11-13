@@ -7,7 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- لود سوپابیس از CDN جایگزین برای پایداری بیشتر -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg: #050810; --bg-secondary: #0a0f1c; --glass-bg: rgba(18, 26, 43, 0.6);
@@ -218,19 +219,26 @@
 
 <script>
     // ==========================================
-    // ⚠️ تنظیمات اتصال به سرور
+    // ⚠️ تنظیمات اتصال
     // ==========================================
     const SUPABASE_URL = 'https://kemwkxuwhqgqqfyfpbmm.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_OsUd9T9GvvY6rvyycxlQSA_xFazoXBe';
     const BASE_URL = `${SUPABASE_URL}/functions/v1`;
     
-    // اتصال به دیتابیس (برای ارسال نوتیفیکیشن مستقیم)
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // اتصال ایمن به دیتابیس (اگر کتابخانه لود نشود، سایت کرش نمی‌کند)
+    let supabase = null;
+    try {
+        if (window.supabase) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+    } catch (e) {
+        console.warn("کتابخانه سوپابیس لود نشد.");
+    }
 
     let adminToken = null;
     let anImageBase64 = '';
 
-    // تابع نمایش پیام (توست)
+    // تابع نمایش پیام
     function showToast(msg, isError = false) {
         const t = document.createElement('div'); 
         t.className = 'toast';
@@ -263,11 +271,10 @@
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('adminSection').classList.remove('hidden');
             
-            // لود کردن اطلاعات اولیه
             loadManualNews(); 
             loadUsers();
         } catch (error) { 
-            showToast(error.message, true); 
+            showToast('❌ ' + error.message, true); 
         } finally { 
             btn.textContent = 'ورود به پنل'; 
             btn.disabled = false; 
@@ -275,13 +282,12 @@
     });
 
     // ==========================================
-    // ۲. سیستم تب‌ها (منو)
+    // ۲. سیستم تب‌ها
     // ==========================================
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            
             btn.classList.add('active'); 
             document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
             
@@ -291,14 +297,12 @@
     });
 
     // ==========================================
-    // ۳. آپلود و فشرده‌سازی عکس
+    // ۳. آپلود عکس
     // ==========================================
     document.getElementById('imageFile').addEventListener('change', (e) => {
         const file = e.target.files[0]; 
         if (!file) return;
-        
-        if (!file.type.startsWith('image/')) return showToast('لطفاً یک فایل عکس انتخاب کنید', true);
-        if (file.size > 10 * 1024 * 1024) return showToast('حجم عکس نباید بیشتر از ۱۰ مگابایت باشد', true);
+        if (!file.type.startsWith('image/')) return showToast('فقط فایل عکس مجاز است', true);
 
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -306,23 +310,18 @@
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 let width = img.width, height = img.height;
-                
-                // فشرده‌سازی به حداکثر 1200 پیکسل
                 const MAX_SIZE = 1200;
                 if (width > MAX_SIZE) { height = Math.round(height * MAX_SIZE / width); width = MAX_SIZE; }
                 if (height > MAX_SIZE) { width = Math.round(width * MAX_SIZE / height); height = MAX_SIZE; }
                 
                 canvas.width = width; canvas.height = height;
                 canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                
-                anImageBase64 = canvas.toDataURL('image/jpeg', 0.82); // فشرده‌سازی با کیفیت 82%
+                anImageBase64 = canvas.toDataURL('image/jpeg', 0.82);
                 
                 document.getElementById('imgPreviewTag').src = anImageBase64;
                 document.getElementById('uploadZone').style.display = 'none';
                 document.getElementById('imgPreview').style.display = 'flex';
-                
-                const sizeKB = Math.round(anImageBase64.length * 0.75 / 1024);
-                document.getElementById('imgSizeInfo').textContent = `حجم نهایی: ${sizeKB} کیلوبایت`;
+                document.getElementById('imgSizeInfo').textContent = `حجم: ${Math.round(anImageBase64.length * 0.75 / 1024)} KB`;
             };
             img.src = event.target.result;
         };
@@ -337,7 +336,7 @@
     };
 
     // ==========================================
-    // ۴. ثبت خبر جدید
+    // ۴. ثبت خبر
     // ==========================================
     document.getElementById('addNewsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -345,13 +344,11 @@
         btn.textContent = '⏳ در حال ثبت...'; 
         btn.disabled = true;
         
-        const isFeatured = document.getElementById('newsFeatured').value === 'true';
-        
         const payload = {
             title: document.getElementById('newsTitle').value.trim(),
             source: document.getElementById('newsSource').value.trim(),
             category: document.getElementById('newsCategory').value,
-            is_featured: isFeatured, // ارسال وضعیت ویژه
+            is_featured: document.getElementById('newsFeatured').value === 'true',
             content: document.getElementById('newsContent').value.trim(),
             image: anImageBase64, 
             published: true
@@ -369,11 +366,10 @@
             });
             if (!res.ok) throw new Error('خطا در ثبت خبر');
             
-            showToast('✅ خبر با موفقیت ثبت شد'); 
+            showToast('✅ خبر ثبت شد'); 
             document.getElementById('addNewsForm').reset(); 
             document.getElementById('removeImgBtn').click();
-            loadManualNews(); // آپدیت لیست
-            
+            loadManualNews(); 
         } catch (error) { 
             showToast(error.message, true); 
         } finally { 
@@ -383,7 +379,7 @@
     });
 
     // ==========================================
-    // ۵. مدیریت اخبار (لیست و حذف)
+    // ۵. لیست اخبار
     // ==========================================
     async function loadManualNews() {
         const tbody = document.getElementById('newsTableBody'); 
@@ -394,44 +390,36 @@
             const data = await res.json();
             
             if (!Array.isArray(data) || data.length === 0) {
-                return tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">هیچ خبر دستی یافت نشد.</td></tr>';
+                return tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">هیچ خبری یافت نشد.</td></tr>';
             }
 
-            tbody.innerHTML = data.map(n => {
-                const date = n.created_at ? new Date(n.created_at).toLocaleDateString('fa-IR') : '—';
-                const id = n._id || n.id;
-                return `
+            tbody.innerHTML = data.map(n => `
                 <tr>
                     <td style="font-weight: 700;">${n.title}</td>
                     <td>${n.is_featured ? '<span style="color:var(--accent-gold); font-weight:bold;">⭐ ویژه</span>' : 'عادی'}</td>
-                    <td style="font-size:0.8rem; color:var(--text-muted);">${date}</td>
-                    <td><button class="btn btn-danger btn-sm" onclick="deleteNews('${id}')">🗑 حذف</button></td>
+                    <td style="font-size:0.8rem; color:var(--text-muted);">${new Date(n.created_at).toLocaleDateString('fa-IR')}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteNews('${n._id || n.id}')">🗑 حذف</button></td>
                 </tr>
-            `}).join('');
+            `).join('');
         } catch (e) { 
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--accent-red);">خطا در دریافت لیست</td></tr>'; 
         }
     }
 
     window.deleteNews = async (id) => {
-        if (!id) return showToast('شناسه نامعتبر است', true);
-        if (!confirm('آیا از حذف این خبر اطمینان دارید؟')) return;
-        
+        if (!id || !confirm('حذف شود؟')) return;
         try {
-            const res = await fetch(`${BASE_URL}/manual-news?id=${id}`, { 
+            await fetch(`${BASE_URL}/manual-news?id=${id}`, { 
                 method: 'DELETE', 
                 headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` } 
             });
-            if (!res.ok) throw new Error('خطا در حذف');
-            showToast('🗑 خبر با موفقیت حذف شد');
+            showToast('🗑 حذف شد');
             loadManualNews();
-        } catch (e) { 
-            showToast(e.message, true); 
-        }
+        } catch (e) { showToast('خطا در حذف', true); }
     };
 
     // ==========================================
-    // ۶. مدیریت کاربران و پیام‌ها
+    // ۶. کاربران و پیام‌ها
     // ==========================================
     async function loadUsers() {
         const tbody = document.getElementById('usersListBody'); 
@@ -450,12 +438,8 @@
                 return tbody.innerHTML = '<tr><td style="text-align:center; color:var(--text-muted);">هنوز کاربری ثبت‌نام نکرده است.</td></tr>';
             }
 
-            // پر کردن جدول
             tbody.innerHTML = users.map(u => `<tr><td style="font-weight:700;">👤 ${u}</td></tr>`).join('');
-            
-            // پر کردن منوی کشویی پیام
             select.innerHTML = '<option value="all">📢 همه کاربران</option>' + users.map(u => `<option value="${u}">${u}</option>`).join('');
-            
         } catch (e) { 
             tbody.innerHTML = '<tr><td style="text-align:center; color:var(--accent-red);">خطا در دریافت کاربران</td></tr>'; 
         }
@@ -467,24 +451,22 @@
         const message = document.getElementById('notifMessage').value.trim();
         const btn = e.target.querySelector('button');
         
-        if (!message) return;
+        if (!message || !supabase) return;
         
         btn.textContent = '⏳ در حال ارسال...'; 
         btn.disabled = true;
 
         try {
-            // ارسال مستقیم به دیتابیس
             const { error } = await supabase.from('notifications').insert([{ 
                 target_user: target, 
                 message: message 
             }]);
-            
             if (error) throw error;
             
-            showToast('✅ پیام با موفقیت ارسال شد'); 
+            showToast('✅ پیام ارسال شد'); 
             document.getElementById('notifMessage').value = '';
         } catch (error) { 
-            showToast('خطا در ارسال: ' + error.message, true); 
+            showToast('خطا: ' + error.message, true); 
         } finally { 
             btn.textContent = 'ارسال پیام'; 
             btn.disabled = false; 
