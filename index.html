@@ -1,250 +1,285 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lreporter</title>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<style>
-  :root { --bg: #050810; --bg-secondary: #0a0f1c; --glass-bg: rgba(18, 26, 43, 0.6); --glass-border: rgba(255, 255, 255, 0.08); --text-main: #f0f4f8; --text-muted: #8b9bb4; --accent-blue: #3b82f6; --accent-cyan: #06b6d4; --accent-red: #ef4444; --accent-gold: #f59e0b; --accent-green: #10b981; --gradient-main: linear-gradient(135deg, #3b82f6, #8b5cf6); --base-font-size: 16px; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text-main); min-height: 100vh; }
-  header { position: sticky; top: 0; z-index: 100; background: rgba(5,8,16,0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); }
-  .header-inner { max-width: 1400px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
-  .logo { font-weight: 900; font-size: 1.6rem; color: var(--accent-blue); }
-  .search-box { flex: 1; }
-  .search-box input { width: 100%; padding: 14px 20px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; color: var(--text-main); }
-  .header-actions { display: flex; gap: 8px; }
-  .icon-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); width: 44px; height: 44px; border-radius: 16px; cursor: pointer; font-size: 18px; position: relative; }
-  .icon-btn .badge { position: absolute; top: -6px; right: -6px; background: var(--accent-red); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 12px; }
-  
-  .grid { max-width: 1400px; margin: 20px auto; padding: 0 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
-  .card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; position: relative; }
-  .card.featured { border: 2px solid var(--accent-gold); box-shadow: 0 0 20px rgba(245,158,11,0.3); }
-  .card-img-wrap { height: 200px; background: #0f1525; }
-  .card-img { width: 100%; height: 100%; object-fit: cover; }
-  .card-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-  .source-tag { font-size: 11px; color: #fff; background: var(--gradient-main); padding: 4px 10px; border-radius: 10px; width: fit-content; }
-  .source-tag.featured { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #000; font-weight: bold; }
-  .card h2 { font-size: 1.1rem; }
-  .card p { font-size: 0.9rem; color: var(--text-muted); }
-  .skeleton { height: 380px; background: var(--glass-bg); border-radius: 24px; border: 1px solid var(--glass-border); animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 0.3; } }
-  
-  .modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--bg-secondary); padding: 30px; border-radius: 24px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
-  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--glass-bg); border: 2px solid var(--accent-blue); padding: 15px 25px; border-radius: 12px; z-index: 9999; font-weight: bold; animation: slideIn 0.3s; }
-  @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت | Lreporter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #050810; --card-bg: #0f1525; --text: #f0f4f8; --text-muted: #8b9bb4; --accent: #3b82f6; --danger: #ef4444; --success: #10b981; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .hidden { display: none !important; }
+        
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+        .login-card { width: 100%; max-width: 400px; }
+        
+        .admin-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-bg); padding: 15px 25px; border-radius: 16px; }
+        .header h1 { font-size: 1.2rem; color: var(--accent); }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; }
+        .tab-btn.active { background: var(--accent); border-color: var(--accent); }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: var(--text-muted); }
+        input, textarea, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: var(--text); font-family: inherit; font-size: 1rem; }
+        
+        button { padding: 12px 20px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; }
+        .btn-danger { background: var(--danger); }
+        .btn-success { background: var(--success); }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+        
+        .table-container { overflow-x: auto; background: var(--card-bg); border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; text-align: right; }
+        th, td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { background: rgba(0,0,0,0.3); color: var(--accent); }
+    </style>
 </head>
 <body>
 
-<header>
-  <div class="header-inner">
-    <div class="logo">Lreporter</div>
-    <div class="search-box"><input type="text" id="searchInput" placeholder="جستجو..."></div>
-    <div class="header-actions">
-      <button class="icon-btn" id="notifBtn" title="پیام‌ها">🔔<span class="badge" id="notifBadge" style="display:none">0</span></button>
-      <button class="icon-btn" id="userBtn" title="پروفایل">👤</button>
-      <button class="icon-btn" id="refreshBtn">🔄</button>
+    <div id="loginSection" class="login-container">
+        <div class="card login-card">
+            <h1 style="text-align: center; margin-bottom: 25px; color: var(--accent);">🔐 ورود به پنل مدیریت</h1>
+            <form id="loginForm">
+                <input type="password" id="adminPassword" placeholder="رمز را وارد کنید..." required style="margin-bottom:15px;">
+                <button type="submit" id="loginBtn" style="width: 100%;">ورود به پنل</button>
+            </form>
+        </div>
     </div>
-  </div>
-</header>
 
-<div class="grid" id="content"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+    <div id="adminSection" class="admin-container hidden">
+        <div class="header">
+            <h1>📊 مدیریت Lreporter</h1>
+            <button id="logoutBtn" class="btn-danger btn-sm">خروج</button>
+        </div>
 
-<!-- مودال پیام‌ها -->
-<div class="modal-overlay" id="notifModal">
-  <div class="modal">
-    <h2 style="margin-bottom: 20px; color: var(--accent-blue);">🔔 پیام‌های شما</h2>
-    <div id="notifList" style="display: flex; flex-direction: column; gap: 10px;"></div>
-    <button onclick="document.getElementById('notifModal').classList.remove('open')" style="width: 100%; margin-top: 20px; padding: 10px; border-radius: 10px; background: var(--accent-blue); color: #fff; border: none; cursor: pointer;">بستن</button>
-  </div>
-</div>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="add">➕ ثبت خبر</button>
+            <button class="tab-btn" data-tab="list">📋 لیست اخبار دستی</button>
+            <button class="tab-btn" data-tab="hide-news">🙈 مدیریت اخبار سایت</button>
+            <button class="tab-btn" data-tab="users">👥 کاربران</button>
+        </div>
 
-<!-- مودال ورود -->
-<div class="modal-overlay" id="authModal">
-  <div class="modal">
-    <h2 style="text-align: center; margin-bottom: 20px;">👤 ورود / ثبت‌نام</h2>
-    <input type="text" id="authUsername" placeholder="نام کاربری..." style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;">
-    <input type="password" id="authPassword" placeholder="رمز عبور..." style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;">
-    <div style="display:flex; gap:10px;">
-      <button id="loginBtn" style="flex:1; padding:12px; background:var(--accent-blue); color:#fff; border:none; border-radius:8px; cursor:pointer;">ورود</button>
-      <button id="regBtn" style="flex:1; padding:12px; background:var(--accent-green); color:#fff; border:none; border-radius:8px; cursor:pointer;">ثبت‌نام</button>
+        <div id="tab-add" class="tab-content">
+            <div class="card">
+                <form id="addNewsForm">
+                    <div class="form-group"><label>عنوان خبر *</label><input type="text" id="newsTitle" required></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                        <div class="form-group"><label>منبع</label><input type="text" id="newsSource" value="خبر دستی"></div>
+                        <div class="form-group">
+                            <label>دسته بندی</label>
+                            <select id="newsCategory"><option>عمومی</option><option>سیاسی</option><option>اقتصاد</option><option>ورزش</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>اهمیت خبر</label>
+                            <select id="newsFeatured"><option value="false">عادی</option><option value="true">⭐ ویژه (بالای سایت)</option></select>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>متن خبر *</label><textarea id="newsContent" required></textarea></div>
+                    <button type="submit" id="submitBtn" style="width: 100%;">ثبت خبر</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="tab-list" class="tab-content hidden">
+            <div class="table-container">
+                <table><thead><tr><th>عنوان</th><th>نوع</th><th>عملیات</th></tr></thead><tbody id="newsTableBody"></tbody></table>
+            </div>
+        </div>
+
+        <div id="tab-hide-news" class="tab-content hidden">
+            <div class="card">
+                <p style="margin-bottom: 15px; color: var(--text-muted);">اخباری که از سایت‌های دیگر می‌آیند را می‌توانید در اینجا مخفی کنید.</p>
+                <div id="scrapedNewsList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-users" class="tab-content hidden">
+            <div class="card" style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px; color: var(--accent);">✉️ ارسال پیام</h3>
+                <form id="sendNotifForm">
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+                        <div class="form-group"><label>گیرنده:</label><select id="notifTarget"><option value="all">همه کاربران</option></select></div>
+                        <div class="form-group"><label>متن پیام:</label><input type="text" id="notifMessage" required></div>
+                    </div>
+                    <button type="submit" style="width: 100%;">ارسال پیام</button>
+                </form>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom: 15px; color: var(--accent);">👥 لیست کاربران</h3>
+                <div class="table-container">
+                    <table><thead><tr><th>نام کاربری</th></tr></thead><tbody id="usersListBody"></tbody></table>
+                </div>
+            </div>
+        </div>
     </div>
-    <button onclick="document.getElementById('authModal').classList.remove('open')" style="width:100%; margin-top:15px; background:none; border:none; color:var(--text-muted); cursor:pointer;">انصراف</button>
-  </div>
-</div>
 
 <script>
-const SUPABASE_URL_AUTH = 'https://kemwkxuwhqgqqfyfpbmm.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_OsUd9T9GvvY6rvyycxlQSA_xFazoXBe';
-const SUPABASE_URL = 'https://kemwkxuwhqgqqfyfpbmm.supabase.co/functions/v1/rapid-processor';
-const MANUAL_NEWS_API = 'https://kemwkxuwhqgqqfyfpbmm.supabase.co/functions/v1/manual-news';
-const HIDDEN_NEWS_URL = 'https://kemwkxuwhqgqqfyfpbmm.supabase.co/functions/v1/hidden-news';
+    const SUPABASE_ANON_KEY = 'sb_publishable_OsUd9T9GvvY6rvyycxlQSA_xFazoXBe'; 
+    const BASE_URL = 'https://kemwkxuwhqgqqfyfpbmm.supabase.co/functions/v1';
+    const ADMIN_LOGIN_URL = `${BASE_URL}/admin-login`;
+    const MANUAL_NEWS_URL = `${BASE_URL}/manual-news`;
+    const SCRAPED_NEWS_URL = `${BASE_URL}/rapid-processor`;
+    const ADMIN_USERS_URL = `${BASE_URL}/admin-users`;
+    const HIDDEN_NEWS_URL = `${BASE_URL}/hidden-news`;
 
-const FAKE_EMAIL_DOMAIN = '@lreporter.local';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL_AUTH, SUPABASE_ANON_KEY);
+    let adminToken = null;
 
-let allNews = [];
-let currentUser = null;
-let lastCheckTime = new Date().toISOString();
+    function showToast(msg, isError = false) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `position:fixed;bottom:20px;right:20px;background:#0f1525;border:1px solid ${isError ? 'var(--danger)' : 'var(--success)'};padding:15px 25px;border-radius:10px;font-weight:bold;z-index:1000;`;
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) { currentUser = session.user; document.getElementById('userBtn').textContent = '👋'; }
-    
-    loadAll();
-    checkNotifications();
-    setInterval(checkNotifications, 30000); 
-});
-
-document.getElementById('refreshBtn').onclick = loadAll;
-
-async function loadAll() {
-    const box = document.getElementById('content');
-    box.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
-    
-    try {
-        const [resScraped, resManual, resHidden] = await Promise.all([
-            fetch(SUPABASE_URL).then(r => r.json()).catch(() => []),
-            fetch(MANUAL_NEWS_API).then(r => r.json()).catch(() => []),
-            fetch(HIDDEN_NEWS_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:'list'}) }).then(r => r.json()).catch(() => [])
-        ]);
-
-        // 🌟 ۱. اصلاح لیست اخبار مخفی
-        const hiddenLinks = Array.isArray(resHidden) ? resHidden : [];
-        let combined = [];
-
-        // 🌟 ۲. پردازش اخبار دستی (با تبدیل قطعی is_featured به Boolean)
-        if (Array.isArray(resManual)) {
-            resManual.forEach(n => {
-                if (!n.link) n.link = 'manual:' + (n._id || Date.now());
-                n._manual = true;
-                // تبدیل مقادیر رشته‌ای به بولین واقعی
-                n.is_featured = (n.is_featured === true || n.is_featured === 'true');
-                combined.push(n);
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('loginBtn'); btn.disabled = true;
+        try {
+            const res = await fetch(ADMIN_LOGIN_URL, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+                body: JSON.stringify({ password: document.getElementById('adminPassword').value })
             });
-        }
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'رمز اشتباه است');
+            adminToken = data.token;
+            showToast('✅ ورود موفق');
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('adminSection').classList.remove('hidden');
+            loadUsers(); loadManualNews();
+        } catch (error) { showToast('❌ ' + error.message, true); } finally { btn.disabled = false; }
+    });
 
-        // 🌟 ۳. پردازش اخبار سایت‌های دیگر (فیلتر کردن مخفی‌ها)
-        if (Array.isArray(resScraped)) {
-            resScraped.forEach(n => {
-                // چک کردن اینکه لینک خبر در لیست مخفی‌ها نباشد
-                if (n.link && !hiddenLinks.includes(n.link.trim())) {
-                    n.is_featured = false; // اخبار سایت‌های دیگر ویژه نیستند
-                    combined.push(n);
-                }
-            });
-        }
-
-        // 🌟 ۴. مرتب‌سازی دقیق: اول ویژه‌ها، بعد بقیه بر اساس تاریخ
-        combined.sort((a, b) => {
-            if (a.is_featured && !b.is_featured) return -1;
-            if (!a.is_featured && b.is_featured) return 1;
-            
-            // استخراج تاریخ (بعضی اخبار pubDate دارند، بعضی date)
-            const dateA = new Date(a.date || a.pubDate || 0).getTime();
-            const dateB = new Date(b.date || b.pubDate || 0).getTime();
-            return dateB - dateA;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+            if (btn.dataset.tab === 'list') loadManualNews();
+            if (btn.dataset.tab === 'users') loadUsers();
+            if (btn.dataset.tab === 'hide-news') loadScrapedNews();
         });
+    });
 
-        allNews = combined;
-        renderNews();
-    } catch (e) { 
-        console.error(e); 
-        box.innerHTML = '<p>خطا در دریافت اخبار</p>'; 
-    }
-}
+    document.getElementById('addNewsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn'); btn.disabled = true;
+        const payload = {
+            title: document.getElementById('newsTitle').value.trim(),
+            source: document.getElementById('newsSource').value.trim(),
+            category: document.getElementById('newsCategory').value,
+            is_featured: document.getElementById('newsFeatured').value === 'true',
+            content: document.getElementById('newsContent').value.trim(),
+            published: true
+        };
+        try {
+            const res = await fetch(MANUAL_NEWS_URL, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('خطا در ثبت');
+            showToast('✅ خبر ثبت شد'); document.getElementById('addNewsForm').reset();
+        } catch (error) { showToast('❌ ' + error.message, true); } finally { btn.disabled = false; }
+    });
 
-function renderNews() {
-    const box = document.getElementById('content');
-    if (!allNews.length) { box.innerHTML = '<p>خبری یافت نشد</p>'; return; }
-    
-    box.innerHTML = allNews.map((n, i) => {
-        const isFeatured = n.is_featured === true;
-        const img = n.image ? `<div class="card-img-wrap"><img class="card-img" src="${n.image}" onerror="this.parent.style.display='none'"></div>` : '';
-        return `
-        <div class="card ${isFeatured ? 'featured' : ''}">
-            ${img}
-            <div class="card-body">
-                <div class="source-tag ${isFeatured ? 'featured' : ''}">${isFeatured ? '⭐ خبر ویژه' : (n.source || 'خبر')}</div>
-                <h2>${n.title}</h2>
-                <p>${n.summary || (n.plain ? n.plain.slice(0,100) : '')}</p>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-// سیستم پیام‌ها
-async function checkNotifications() {
-    let query = supabaseClient.from('notifications').select('*').gt('created_at', lastCheckTime);
-    if (currentUser) {
-        const username = currentUser.email.replace(FAKE_EMAIL_DOMAIN, '');
-        query = query.or(`target_user.eq.all,target_user.eq.${username}`);
-    } else {
-        query = query.eq('target_user', 'all');
-    }
-
-    const { data } = await query;
-    if (data && data.length > 0) {
-        data.forEach(msg => showToast(`🔔 پیام جدید: ${msg.message}`));
-        lastCheckTime = new Date().toISOString();
-        const badge = document.getElementById('notifBadge');
-        badge.style.display = 'block';
-        badge.textContent = parseInt(badge.textContent || 0) + data.length;
-    }
-}
-
-function showToast(msg) {
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 5000);
-}
-
-document.getElementById('notifBtn').onclick = async () => {
-    document.getElementById('notifModal').classList.add('open');
-    document.getElementById('notifBadge').style.display = 'none';
-    
-    let query = supabaseClient.from('notifications').select('*').order('created_at', { ascending: false }).limit(20);
-    if (currentUser) {
-        const username = currentUser.email.replace(FAKE_EMAIL_DOMAIN, '');
-        query = query.or(`target_user.eq.all,target_user.eq.${username}`);
-    } else {
-        query = query.eq('target_user', 'all');
+    async function loadManualNews() {
+        const tbody = document.getElementById('newsTableBody'); tbody.innerHTML = '<tr><td colspan="3">بارگذاری...</td></tr>';
+        try {
+            const res = await fetch(`${MANUAL_NEWS_URL}?all=1`, { headers: { 'apikey': SUPABASE_ANON_KEY } });
+            const data = await res.json();
+            tbody.innerHTML = data.map(n => `
+                <tr>
+                    <td>${n.title}</td>
+                    <td>${n.is_featured ? '⭐ ویژه' : 'عادی'}</td>
+                    <td><button class="btn-danger btn-sm" onclick="deleteManualNews('${n._id || n.id}')">حذف</button></td>
+                </tr>
+            `).join('') || '<tr><td colspan="3">خبری نیست</td></tr>';
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="3">خطا</td></tr>'; }
     }
 
-    const { data } = await query;
-    const list = document.getElementById('notifList');
-    if (data && data.length > 0) {
-        list.innerHTML = data.map(m => `<div style="padding: 10px; background: var(--glass-bg); border-radius: 10px;">${m.message}</div>`).join('');
-    } else {
-        list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">پیامی ندارید.</p>';
+    window.deleteManualNews = async (id) => {
+        if (!confirm('حذف شود؟')) return;
+        await fetch(`${MANUAL_NEWS_URL}?id=${id}`, { method: 'DELETE', headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` } });
+        loadManualNews();
+    };
+
+    async function loadUsers() {
+        const tbody = document.getElementById('usersListBody');
+        const select = document.getElementById('notifTarget');
+        tbody.innerHTML = '<tr><td>بارگذاری...</td></tr>';
+        try {
+            const res = await fetch(ADMIN_USERS_URL, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+                body: JSON.stringify({ action: 'list' })
+            });
+            const users = await res.json();
+            tbody.innerHTML = users.map(u => `<tr><td>${u}</td></tr>`).join('');
+            select.innerHTML = '<option value="all">همه کاربران</option>' + users.map(u => `<option value="${u}">${u}</option>`).join('');
+        } catch (e) { tbody.innerHTML = '<tr><td>خطا در دریافت</td></tr>'; }
     }
-};
 
-document.getElementById('userBtn').onclick = () => {
-    if (currentUser) { if(confirm('خارج می‌شوید؟')) supabaseClient.auth.signOut().then(() => location.reload()); } 
-    else { document.getElementById('authModal').classList.add('open'); }
-};
+    document.getElementById('sendNotifForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const target = document.getElementById('notifTarget').value;
+        const message = document.getElementById('notifMessage').value;
+        try {
+            await fetch(ADMIN_USERS_URL, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+                body: JSON.stringify({ action: 'notify', target, message })
+            });
+            showToast('✅ پیام ارسال شد'); document.getElementById('notifMessage').value = '';
+        } catch (e) { showToast('خطا', true); }
+    });
 
-document.getElementById('loginBtn').onclick = async () => {
-    const u = document.getElementById('authUsername').value.trim();
-    const p = document.getElementById('authPassword').value.trim();
-    const { error } = await supabaseClient.auth.signInWithPassword({ email: u + FAKE_EMAIL_DOMAIN, password: p });
-    if (error) alert('خطا: ' + error.message); else location.reload();
-};
+    async function loadScrapedNews() {
+        const container = document.getElementById('scrapedNewsList');
+        container.innerHTML = 'در حال بارگذاری...';
+        try {
+            const [resScraped, resHidden] = await Promise.all([
+                fetch(SCRAPED_NEWS_URL, { headers: { 'apikey': SUPABASE_ANON_KEY } }).then(r => r.json()),
+                fetch(HIDDEN_NEWS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list' }) }).then(r => r.json())
+            ]);
+            
+            const hiddenLinks = Array.isArray(resHidden) ? resHidden : [];
+            
+            if (!resScraped || resScraped.length === 0) {
+                container.innerHTML = 'خبری یافت نشد.'; return;
+            }
 
-document.getElementById('regBtn').onclick = async () => {
-    const u = document.getElementById('authUsername').value.trim();
-    const p = document.getElementById('authPassword').value.trim();
-    const { error } = await supabaseClient.auth.signUp({ email: u + FAKE_EMAIL_DOMAIN, password: p });
-    if (error) alert('خطا: ' + error.message); else location.reload();
-};
+            // استفاده از Base64 برای جلوگیری از خرابی لینک‌های دارای کاراکتر خاص
+            container.innerHTML = resScraped.map(n => {
+                const isHidden = hiddenLinks.includes(n.link.trim());
+                const safeLink = btoa(unescape(encodeURIComponent(n.link.trim()))); 
+                
+                return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                    <span style="font-size: 0.9rem; flex: 1; margin-left: 10px;">${n.title}</span>
+                    ${isHidden 
+                        ? `<button class="btn-success btn-sm" style="white-space:nowrap;" onclick="toggleHide('${safeLink}', 'unhide')">👁 نمایش در سایت</button>`
+                        : `<button class="btn-danger btn-sm" style="white-space:nowrap;" onclick="toggleHide('${safeLink}', 'hide')">🙈 مخفی کردن</button>`
+                    }
+                </div>`;
+            }).join('');
+        } catch (e) { container.innerHTML = 'خطا در دریافت'; }
+    }
+
+    window.toggleHide = async (safeLink, action) => {
+        // دیکد کردن لینک قبل از ارسال به سرور
+        const link = decodeURIComponent(escape(atob(safeLink)));
+        
+        await fetch(HIDDEN_NEWS_URL, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+            body: JSON.stringify({ action, link: link })
+        });
+        loadScrapedNews();
+    };
+
+    document.getElementById('logoutBtn').onclick = () => location.reload();
 </script>
 </body>
 </html>
