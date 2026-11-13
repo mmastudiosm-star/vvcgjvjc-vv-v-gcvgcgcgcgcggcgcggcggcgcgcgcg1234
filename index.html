@@ -4,181 +4,499 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>پنل مدیریت | Lreporter</title>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #050810; --card-bg: #0f1525; --text: #f0f4f8; --text-muted: #8b9bb4; --accent: #3b82f6; --danger: #ef4444; --success: #10b981; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        :root {
+            --bg: #050810; --bg-secondary: #0a0f1c; --glass-bg: rgba(18, 26, 43, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08); --text-main: #f0f4f8; --text-muted: #8b9bb4;
+            --accent-blue: #3b82f6; --accent-gold: #f59e0b; --accent-red: #ef4444; --accent-green: #10b981;
+            --gradient-main: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --radius-lg: 20px; --radius-md: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Vazirmatn', Tahoma, sans-serif; background-color: var(--bg); color: var(--text-main); min-height: 100vh; line-height: 1.8; }
         .hidden { display: none !important; }
-        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .card { background: var(--card-bg); border-radius: 16px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
-        .login-card { width: 100%; max-width: 400px; }
-        .admin-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-bg); padding: 15px 25px; border-radius: 16px; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; }
-        .tab-btn.active { background: var(--accent); border-color: var(--accent); }
-        .form-group { margin-bottom: 15px; }
+
+        /* صفحه ورود */
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background: radial-gradient(circle at 15% 15%, rgba(59,130,246,0.15), transparent 40%); }
+        .card { background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .login-card { width: 100%; max-width: 400px; text-align: center; }
+        .login-card h1 { color: var(--accent-blue); margin-bottom: 25px; font-size: 1.5rem; }
+        
+        /* پنل اصلی */
+        .admin-container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--glass-bg); padding: 15px 25px; border-radius: var(--radius-lg); border: 1px solid var(--glass-border); margin-bottom: 24px; flex-wrap: wrap; gap: 15px; }
+        .header h1 { font-size: 1.3rem; background: var(--gradient-main); -webkit-background-clip: text; color: transparent; font-weight: 900; }
+        
+        /* تب‌ها */
+        .tabs { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+        .tab-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 10px 20px; border-radius: 30px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 0.95rem; transition: 0.3s; }
+        .tab-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-main); }
+        .tab-btn.active { background: var(--gradient-main); color: #fff; border-color: transparent; box-shadow: 0 4px 15px rgba(59,130,246,0.3); }
+
+        /* فرم‌ها */
+        .form-group { margin-bottom: 16px; }
         label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: var(--text-muted); }
-        input, textarea, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: var(--text); font-family: inherit; }
-        button { padding: 12px 20px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; }
-        .btn-danger { background: var(--danger); }
-        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+        input, textarea, select { width: 100%; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); background: #000; color: var(--text-main); font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s; }
+        input:focus, textarea:focus, select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+        textarea { min-height: 150px; resize: vertical; }
+        
+        /* دکمه‌ها */
+        .btn { padding: 12px 24px; border-radius: var(--radius-md); font-weight: 700; font-family: inherit; font-size: 1rem; cursor: pointer; border: none; transition: 0.3s; display: inline-flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--gradient-main); color: #fff; box-shadow: 0 4px 15px rgba(59,130,246,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-danger { background: rgba(239,68,68,0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
+        .btn-danger:hover { background: var(--accent-red); color: #fff; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 8px; }
+        
+        /* آپلود عکس */
+        .upload-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; border: 2px dashed var(--glass-border); border-radius: var(--radius-md); cursor: pointer; transition: 0.3s; background: rgba(0,0,0,0.2); }
+        .upload-zone:hover { border-color: var(--accent-blue); background: rgba(59,130,246,0.05); }
+        #imgPreview { display: none; align-items: center; gap: 15px; margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: var(--radius-md); border: 1px solid var(--glass-border); }
+        #imgPreview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+
+        /* جدول‌ها */
+        .table-container { overflow-x: auto; background: var(--glass-bg); border-radius: var(--radius-lg); border: 1px solid var(--glass-border); }
         table { width: 100%; border-collapse: collapse; text-align: right; }
-        th, td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        th { background: rgba(0,0,0,0.3); color: var(--accent); }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #0f1525; padding: 15px 25px; border-radius: 10px; font-weight: bold; z-index: 1000; border: 1px solid var(--accent); }
+        th, td { padding: 16px; border-bottom: 1px solid var(--glass-border); }
+        th { background: rgba(0,0,0,0.3); color: var(--accent-cyan); font-weight: 800; font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* توست */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: var(--bg-secondary); border: 1px solid var(--accent-blue); color: var(--text-main); padding: 15px 25px; border-radius: var(--radius-md); font-weight: 700; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.3s; }
+        @keyframes slideIn { from { transform: translateX(120%); } to { transform: translateX(0); } }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; align-items: flex-start; }
+            .tabs { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 10px; }
+            .tab-btn { white-space: nowrap; }
+            th, td { padding: 12px 8px; font-size: 0.85rem; }
+        }
     </style>
 </head>
 <body>
 
+    <!-- ۱. صفحه ورود -->
     <div id="loginSection" class="login-container">
         <div class="card login-card">
-            <h1 style="text-align: center; margin-bottom: 25px; color: var(--accent);">🔐 ورود به پنل</h1>
+            <h1>🔐 ورود به پنل مدیریت</h1>
             <form id="loginForm">
-                <input type="password" id="adminPassword" placeholder="رمز را وارد کنید..." required style="margin-bottom:15px;">
-                <button type="submit" style="width: 100%;">ورود</button>
+                <div class="form-group">
+                    <input type="password" id="adminPassword" placeholder="رمز عبور مدیریت..." required>
+                </div>
+                <button type="submit" id="loginBtn" class="btn btn-primary" style="width: 100%;">ورود به پنل</button>
             </form>
         </div>
     </div>
 
+    <!-- ۲. پنل اصلی -->
     <div id="adminSection" class="admin-container hidden">
         <div class="header">
             <h1>📊 مدیریت Lreporter</h1>
-            <button id="logoutBtn" class="btn-danger btn-sm">خروج</button>
+            <button id="logoutBtn" class="btn btn-danger btn-sm">🚪 خروج</button>
         </div>
 
         <div class="tabs">
-            <button class="tab-btn active" data-tab="add">➕ ثبت خبر</button>
-            <button class="tab-btn" data-tab="list">📋 لیست اخبار</button>
-            <button class="tab-btn" data-tab="users">👥 کاربران و پیام</button>
+            <button class="tab-btn active" data-tab="add">➕ ثبت خبر جدید</button>
+            <button class="tab-btn" data-tab="list">📋 لیست اخبار دستی</button>
+            <button class="tab-btn" data-tab="users">👥 کاربران و پیام‌ها</button>
         </div>
 
-        <!-- ثبت خبر -->
+        <!-- تب ثبت خبر -->
         <div id="tab-add" class="tab-content">
             <div class="card">
                 <form id="addNewsForm">
-                    <div class="form-group"><label>عنوان خبر *</label><input type="text" id="newsTitle" required></div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                        <div class="form-group"><label>منبع</label><input type="text" id="newsSource" value="خبر دستی"></div>
-                        <div class="form-group"><label>دسته</label><select id="newsCategory"><option>عمومی</option><option>سیاسی</option><option>اقتصاد</option></select></div>
-                        <div class="form-group"><label>اهمیت</label><select id="newsFeatured"><option value="false">عادی</option><option value="true">⭐ ویژه</option></select></div>
+                    <div class="form-group">
+                        <label>عنوان خبر *</label>
+                        <input type="text" id="newsTitle" required placeholder="عنوان خبر را وارد کنید">
                     </div>
-                    <div class="form-group"><label>متن خبر *</label><textarea id="newsContent" required></textarea></div>
-                    <button type="submit" style="width: 100%;">ثبت خبر</button>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="form-group">
+                            <label>منبع</label>
+                            <input type="text" id="newsSource" value="خبر دستی">
+                        </div>
+                        <div class="form-group">
+                            <label>دسته بندی</label>
+                            <select id="newsCategory">
+                                <option>عمومی</option><option>سیاسی</option><option>اقتصاد</option>
+                                <option>ورزش</option><option>فناوری</option><option>سلامت</option>
+                                <option>فرهنگ</option><option>حوادث</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>اهمیت خبر</label>
+                            <select id="newsFeatured" style="color: var(--accent-gold); font-weight: bold;">
+                                <option value="false" style="color: white;">عادی (مثل بقیه)</option>
+                                <option value="true" style="color: gold;">⭐ ویژه (می‌رود بالای سایت)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>عکس خبر (اختیاری)</label>
+                        <label for="imageFile" class="upload-zone" id="uploadZone">
+                            <input type="file" id="imageFile" accept="image/*" hidden>
+                            <span style="font-size: 2rem; margin-bottom: 10px;">📸</span>
+                            <span style="color: var(--text-muted); font-size: 0.9rem;">برای انتخاب عکس کلیک کنید (فشرده‌سازی خودکار)</span>
+                        </label>
+                        <div id="imgPreview">
+                            <img id="imgPreviewTag" alt="پیش‌نمایش">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: var(--accent-green); margin-bottom: 5px;">✅ عکس آماده است</div>
+                                <div id="imgSizeInfo" style="font-size: 0.8rem; color: var(--text-muted);"></div>
+                            </div>
+                            <button type="button" id="removeImgBtn" class="btn btn-danger btn-sm">حذف</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>متن کامل خبر *</label>
+                        <textarea id="newsContent" required placeholder="متن خبر را اینجا بنویسید..."></textarea>
+                    </div>
+                    
+                    <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;">ثبت و انتشار در سایت</button>
                 </form>
             </div>
         </div>
 
-        <!-- لیست اخبار -->
+        <!-- تب لیست اخبار -->
         <div id="tab-list" class="tab-content hidden">
-            <div class="card"><table><thead><tr><th>عنوان</th><th>نوع</th><th>عملیات</th></tr></thead><tbody id="newsTableBody"></tbody></table></div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>عنوان</th>
+                            <th>نوع</th>
+                            <th>تاریخ</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="newsTableBody">
+                        <tr><td colspan="4" style="text-align:center;">در حال بارگذاری...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- کاربران و پیام -->
+        <!-- تب کاربران -->
         <div id="tab-users" class="tab-content hidden">
-            <div class="card" style="margin-bottom: 20px;">
+            <div class="card" style="margin-bottom: 24px;">
+                <h3 style="margin-bottom: 20px; color: var(--accent-gold);">✉️ ارسال پیام (نوتیفیکیشن)</h3>
                 <form id="sendNotifForm">
-                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
-                        <div class="form-group"><label>گیرنده:</label><select id="notifTarget"><option value="all">همه</option></select></div>
-                        <div class="form-group"><label>پیام:</label><input type="text" id="notifMessage" required></div>
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>گیرنده:</label>
+                            <select id="notifTarget">
+                                <option value="all">📢 همه کاربران</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>متن پیام:</label>
+                            <input type="text" id="notifMessage" placeholder="متن پیام خود را بنویسید..." required>
+                        </div>
                     </div>
-                    <button type="submit" style="width: 100%;">ارسال پیام</button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">ارسال پیام</button>
                 </form>
             </div>
-            <div class="card"><table><thead><tr><th>کاربر</th></tr></thead><tbody id="usersListBody"></tbody></table></div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>👥 لیست کاربران ثبت‌نام‌شده</th></tr>
+                    </thead>
+                    <tbody id="usersListBody">
+                        <tr><td style="text-align:center;">در حال بارگذاری...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
 <script>
+    // ==========================================
+    // ⚠️ تنظیمات اتصال به سرور
+    // ==========================================
     const SUPABASE_URL = 'https://kemwkxuwhqgqqfyfpbmm.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_OsUd9T9GvvY6rvyycxlQSA_xFazoXBe';
     const BASE_URL = `${SUPABASE_URL}/functions/v1`;
     
+    // اتصال به دیتابیس (برای ارسال نوتیفیکیشن مستقیم)
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    let adminToken = null;
 
+    let adminToken = null;
+    let anImageBase64 = '';
+
+    // تابع نمایش پیام (توست)
     function showToast(msg, isError = false) {
-        const t = document.createElement('div'); t.className = 'toast';
-        t.style.borderColor = isError ? 'var(--danger)' : 'var(--success)'; t.textContent = msg;
-        document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
+        const t = document.createElement('div'); 
+        t.className = 'toast';
+        t.style.borderColor = isError ? 'var(--accent-red)' : 'var(--accent-blue)'; 
+        t.textContent = msg;
+        document.body.appendChild(t); 
+        setTimeout(() => t.remove(), 3000);
     }
 
+    // ==========================================
+    // ۱. سیستم ورود
+    // ==========================================
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const btn = document.getElementById('loginBtn'); 
+        btn.textContent = 'در حال بررسی...'; 
+        btn.disabled = true;
+
         try {
             const res = await fetch(`${BASE_URL}/admin-login`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
                 body: JSON.stringify({ password: document.getElementById('adminPassword').value })
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'رمز اشتباه');
+            if (!res.ok) throw new Error(data.error || 'رمز عبور اشتباه است');
+            
             adminToken = data.token;
+            showToast('✅ ورود موفق!');
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('adminSection').classList.remove('hidden');
-            loadUsers(); loadManualNews();
-        } catch (error) { showToast(error.message, true); }
+            
+            // لود کردن اطلاعات اولیه
+            loadManualNews(); 
+            loadUsers();
+        } catch (error) { 
+            showToast(error.message, true); 
+        } finally { 
+            btn.textContent = 'ورود به پنل'; 
+            btn.disabled = false; 
+        }
     });
 
+    // ==========================================
+    // ۲. سیستم تب‌ها (منو)
+    // ==========================================
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            btn.classList.add('active'); document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+            
+            btn.classList.add('active'); 
+            document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+            
             if (btn.dataset.tab === 'list') loadManualNews();
             if (btn.dataset.tab === 'users') loadUsers();
         });
     });
 
+    // ==========================================
+    // ۳. آپلود و فشرده‌سازی عکس
+    // ==========================================
+    document.getElementById('imageFile').addEventListener('change', (e) => {
+        const file = e.target.files[0]; 
+        if (!file) return;
+        
+        if (!file.type.startsWith('image/')) return showToast('لطفاً یک فایل عکس انتخاب کنید', true);
+        if (file.size > 10 * 1024 * 1024) return showToast('حجم عکس نباید بیشتر از ۱۰ مگابایت باشد', true);
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width, height = img.height;
+                
+                // فشرده‌سازی به حداکثر 1200 پیکسل
+                const MAX_SIZE = 1200;
+                if (width > MAX_SIZE) { height = Math.round(height * MAX_SIZE / width); width = MAX_SIZE; }
+                if (height > MAX_SIZE) { width = Math.round(width * MAX_SIZE / height); height = MAX_SIZE; }
+                
+                canvas.width = width; canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                
+                anImageBase64 = canvas.toDataURL('image/jpeg', 0.82); // فشرده‌سازی با کیفیت 82%
+                
+                document.getElementById('imgPreviewTag').src = anImageBase64;
+                document.getElementById('uploadZone').style.display = 'none';
+                document.getElementById('imgPreview').style.display = 'flex';
+                
+                const sizeKB = Math.round(anImageBase64.length * 0.75 / 1024);
+                document.getElementById('imgSizeInfo').textContent = `حجم نهایی: ${sizeKB} کیلوبایت`;
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    document.getElementById('removeImgBtn').onclick = () => {
+        anImageBase64 = ''; 
+        document.getElementById('uploadZone').style.display = 'flex';
+        document.getElementById('imgPreview').style.display = 'none'; 
+        document.getElementById('imageFile').value = '';
+    };
+
+    // ==========================================
+    // ۴. ثبت خبر جدید
+    // ==========================================
     document.getElementById('addNewsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const btn = document.getElementById('submitBtn'); 
+        btn.textContent = '⏳ در حال ثبت...'; 
+        btn.disabled = true;
+        
+        const isFeatured = document.getElementById('newsFeatured').value === 'true';
+        
         const payload = {
             title: document.getElementById('newsTitle').value.trim(),
             source: document.getElementById('newsSource').value.trim(),
             category: document.getElementById('newsCategory').value,
-            is_featured: document.getElementById('newsFeatured').value === 'true',
-            content: document.getElementById('newsContent').value.trim(), published: true
+            is_featured: isFeatured, // ارسال وضعیت ویژه
+            content: document.getElementById('newsContent').value.trim(),
+            image: anImageBase64, 
+            published: true
         };
+        
         try {
             const res = await fetch(`${BASE_URL}/manual-news`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` },
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'apikey': SUPABASE_ANON_KEY, 
+                    'Authorization': `Bearer ${adminToken}` 
+                },
                 body: JSON.stringify(payload)
             });
-            if (!res.ok) throw new Error('خطا در ثبت');
-            showToast('✅ ثبت شد'); document.getElementById('addNewsForm').reset();
-        } catch (error) { showToast(error.message, true); }
+            if (!res.ok) throw new Error('خطا در ثبت خبر');
+            
+            showToast('✅ خبر با موفقیت ثبت شد'); 
+            document.getElementById('addNewsForm').reset(); 
+            document.getElementById('removeImgBtn').click();
+            loadManualNews(); // آپدیت لیست
+            
+        } catch (error) { 
+            showToast(error.message, true); 
+        } finally { 
+            btn.textContent = 'ثبت و انتشار در سایت'; 
+            btn.disabled = false; 
+        }
     });
 
+    // ==========================================
+    // ۵. مدیریت اخبار (لیست و حذف)
+    // ==========================================
     async function loadManualNews() {
-        const tbody = document.getElementById('newsTableBody'); tbody.innerHTML = '<tr><td colspan="3">بارگذاری...</td></tr>';
-        const res = await fetch(`${BASE_URL}/manual-news?all=1`); const data = await res.json();
-        tbody.innerHTML = data.map(n => `<tr><td>${n.title}</td><td>${n.is_featured ? '⭐ ویژه' : 'عادی'}</td><td><button class="btn-danger btn-sm" onclick="delNews('${n._id || n.id}')">حذف</button></td></tr>`).join('');
+        const tbody = document.getElementById('newsTableBody'); 
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">در حال بارگذاری...</td></tr>';
+        
+        try {
+            const res = await fetch(`${BASE_URL}/manual-news?all=1`, { headers: { 'apikey': SUPABASE_ANON_KEY } });
+            const data = await res.json();
+            
+            if (!Array.isArray(data) || data.length === 0) {
+                return tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">هیچ خبر دستی یافت نشد.</td></tr>';
+            }
+
+            tbody.innerHTML = data.map(n => {
+                const date = n.created_at ? new Date(n.created_at).toLocaleDateString('fa-IR') : '—';
+                const id = n._id || n.id;
+                return `
+                <tr>
+                    <td style="font-weight: 700;">${n.title}</td>
+                    <td>${n.is_featured ? '<span style="color:var(--accent-gold); font-weight:bold;">⭐ ویژه</span>' : 'عادی'}</td>
+                    <td style="font-size:0.8rem; color:var(--text-muted);">${date}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteNews('${id}')">🗑 حذف</button></td>
+                </tr>
+            `}).join('');
+        } catch (e) { 
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--accent-red);">خطا در دریافت لیست</td></tr>'; 
+        }
     }
-    window.delNews = async (id) => {
-        if (!confirm('حذف شود؟')) return;
-        await fetch(`${BASE_URL}/manual-news?id=${id}`, { method: 'DELETE', headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` } });
-        loadManualNews();
+
+    window.deleteNews = async (id) => {
+        if (!id) return showToast('شناسه نامعتبر است', true);
+        if (!confirm('آیا از حذف این خبر اطمینان دارید؟')) return;
+        
+        try {
+            const res = await fetch(`${BASE_URL}/manual-news?id=${id}`, { 
+                method: 'DELETE', 
+                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` } 
+            });
+            if (!res.ok) throw new Error('خطا در حذف');
+            showToast('🗑 خبر با موفقیت حذف شد');
+            loadManualNews();
+        } catch (e) { 
+            showToast(e.message, true); 
+        }
     };
 
+    // ==========================================
+    // ۶. مدیریت کاربران و پیام‌ها
+    // ==========================================
     async function loadUsers() {
-        const tbody = document.getElementById('usersListBody'); const select = document.getElementById('notifTarget');
-        const res = await fetch(`${BASE_URL}/admin-users`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list' }) });
-        const users = await res.json();
-        tbody.innerHTML = users.map(u => `<tr><td>${u}</td></tr>`).join('');
-        select.innerHTML = '<option value="all">همه کاربران</option>' + users.map(u => `<option value="${u}">${u}</option>`).join('');
+        const tbody = document.getElementById('usersListBody'); 
+        const select = document.getElementById('notifTarget');
+        tbody.innerHTML = '<tr><td style="text-align:center;">در حال بارگذاری...</td></tr>';
+        
+        try {
+            const res = await fetch(`${BASE_URL}/admin-users`, {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+                body: JSON.stringify({ action: 'list' })
+            });
+            const users = await res.json();
+            
+            if (!Array.isArray(users) || users.length === 0) {
+                return tbody.innerHTML = '<tr><td style="text-align:center; color:var(--text-muted);">هنوز کاربری ثبت‌نام نکرده است.</td></tr>';
+            }
+
+            // پر کردن جدول
+            tbody.innerHTML = users.map(u => `<tr><td style="font-weight:700;">👤 ${u}</td></tr>`).join('');
+            
+            // پر کردن منوی کشویی پیام
+            select.innerHTML = '<option value="all">📢 همه کاربران</option>' + users.map(u => `<option value="${u}">${u}</option>`).join('');
+            
+        } catch (e) { 
+            tbody.innerHTML = '<tr><td style="text-align:center; color:var(--accent-red);">خطا در دریافت کاربران</td></tr>'; 
+        }
     }
 
     document.getElementById('sendNotifForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        await supabase.from('notifications').insert({
-            target_user: document.getElementById('notifTarget').value,
-            message: document.getElementById('notifMessage').value
-        });
-        showToast('✅ پیام ارسال شد'); document.getElementById('notifMessage').value = '';
+        const target = document.getElementById('notifTarget').value;
+        const message = document.getElementById('notifMessage').value.trim();
+        const btn = e.target.querySelector('button');
+        
+        if (!message) return;
+        
+        btn.textContent = '⏳ در حال ارسال...'; 
+        btn.disabled = true;
+
+        try {
+            // ارسال مستقیم به دیتابیس
+            const { error } = await supabase.from('notifications').insert([{ 
+                target_user: target, 
+                message: message 
+            }]);
+            
+            if (error) throw error;
+            
+            showToast('✅ پیام با موفقیت ارسال شد'); 
+            document.getElementById('notifMessage').value = '';
+        } catch (error) { 
+            showToast('خطا در ارسال: ' + error.message, true); 
+        } finally { 
+            btn.textContent = 'ارسال پیام'; 
+            btn.disabled = false; 
+        }
     });
 
-    document.getElementById('logoutBtn').onclick = () => location.reload();
+    // ==========================================
+    // ۷. خروج
+    // ==========================================
+    document.getElementById('logoutBtn').onclick = () => {
+        if (confirm('از پنل خارج می‌شوید؟')) location.reload();
+    };
 </script>
 </body>
 </html>
