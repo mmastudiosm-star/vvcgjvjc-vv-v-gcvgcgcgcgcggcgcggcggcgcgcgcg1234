@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پنل مدیریت پیشرفته | Lreporter</title>
+    <title>پنل مدیریت | Lreporter</title>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { 
             --bg: #050810; --card-bg: #0f1525; --text: #f0f4f8; --text-muted: #8b9bb4;
@@ -13,10 +12,11 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 40px 20px; }
-        .container { width: 100%; max-width: 900px; }
+        .container { width: 100%; max-width: 800px; }
         .card { background: var(--card-bg); border-radius: 16px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
         h1 { text-align: center; margin-bottom: 30px; color: var(--accent); font-size: 1.5rem; }
         
+        /* تب‌ها */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn { flex: 1; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); font-family: inherit; font-weight: 700; cursor: pointer; transition: 0.3s; text-align: center; }
         .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -34,28 +34,43 @@
         button:hover { opacity: 0.9; transform: translateY(-1px); }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .btn-danger { background: var(--danger); }
-        .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; border-radius: 6px; }
-        .btn-success { background: var(--success); }
-        .btn-gold { background: var(--gold); color: #000; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
         
         .hidden { display: none !important; }
         
         .toast { position: fixed; bottom: 20px; right: 20px; background: var(--card-bg); border: 1px solid var(--accent); padding: 15px 25px; border-radius: 10px; color: var(--text); font-weight: 700; z-index: 1000; animation: slideIn 0.3s; max-width: 90vw; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
+        /* آپلود عکس */
         .upload-zone { display: block; border: 2px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: 0.25s; background: rgba(0,0,0,0.2); }
         .upload-zone:hover { border-color: var(--accent); background: rgba(59,130,246,0.1); }
         #imgPreview { display: none; align-items: center; gap: 10px; margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; }
-        #imgPreview img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; }
+        #imgPreview img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
 
-        .list-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); gap: 10px; flex-wrap: wrap; }
-        .list-item .info { flex: 1; min-width: 200px; }
-        .list-item .title { font-weight: bold; margin-bottom: 5px; }
-        .list-item .meta { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 10px; }
-        .list-item .actions { display: flex; gap: 8px; }
-        
-        .search-bar { display: flex; gap: 10px; margin-bottom: 15px; }
-        .search-bar input { flex: 1; }
+        /* لیست‌ها */
+        .list-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .upload-zone.processing { opacity: .7; cursor: progress; }
+        .empty-state { color: var(--text-muted); text-align: center; padding: 22px; }
+        .error-state { color: var(--danger); }
+        .news-list-title { font-weight: 800; margin-bottom: 5px; overflow-wrap: anywhere; }
+        .news-list-state { font-size: .8rem; color: var(--text-muted); }
+        .list-item { gap: 14px; }
+        .list-item > div { min-width: 0; }
+        .delete-news-btn { flex: 0 0 auto; }
+        input, textarea, select { min-width: 0; }
+        button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        @media (max-width: 700px) {
+            body { padding: 18px 12px; }
+            .card { padding: 20px 16px; }
+            .container { max-width: 100%; }
+            .tabs { display: grid; grid-template-columns: 1fr; }
+            .tabs .tab-btn { width: 100%; }
+            #tab-add form > div[style*="grid-template-columns"] { display: grid !important; grid-template-columns: 1fr !important; gap: 0 !important; }
+            #tab-users .card > div[style*="grid-template-columns"] { display: grid !important; grid-template-columns: 1fr !important; gap: 0 !important; }
+            .list-item { align-items: flex-start; }
+            .toast { right: 12px; bottom: 12px; max-width: calc(100vw - 24px); }
+        }
     </style>
 </head>
 <body>
@@ -73,22 +88,21 @@
         </form>
     </div>
 
-    <!-- ۲. پنل ادمین -->
+    <!-- ۲. پنل ادمین (بعد از ورود) -->
     <div id="adminSection" class="hidden">
         
+        <!-- تب‌ها -->
         <div class="tabs">
-            <button class="tab-btn active" data-tab="add">➕ ثبت / ویرایش خبر</button>
-            <button class="tab-btn" data-tab="list">📋 مدیریت اخبار</button>
+            <button class="tab-btn active" data-tab="add">➕ ثبت خبر</button>
+            <button class="tab-btn" data-tab="list">📋 لیست اخبار</button>
             <button class="tab-btn" data-tab="users">👥 کاربران و پیام</button>
         </div>
 
         <!-- تب ثبت خبر -->
         <div id="tab-add" class="tab-content active">
             <div class="card">
-                <h1 id="formTitle">📰 ثبت خبر جدید</h1>
+                <h1>📰 ثبت خبر جدید</h1>
                 <form id="addNewsForm">
-                    <input type="hidden" id="editNewsId" value="">
-                    
                     <div class="form-group">
                         <label>عنوان خبر *</label>
                         <input type="text" id="newsTitle" required>
@@ -117,16 +131,16 @@
                     </div>
 
                     <div class="form-group">
-                        <label>عکس خبر (آپلود در کلود)</label>
+                        <label>عکس خبر (اختیاری)</label>
                         <label for="imageFile" class="upload-zone" id="uploadZone">
-                            <input type="file" id="imageFile" accept="image/*" hidden>
+                            <input type="file" id="imageFile" accept="image/jpeg,image/png,image/webp" hidden>
                             <span style="font-size: 1.5rem;">📸</span>
-                            <div style="font-size: 0.9rem; margin-top: 5px;">برای انتخاب عکس کلیک کنید (حداکثر ۲ مگابایت)</div>
+                            <div id="uploadText" style="font-size: 0.9rem; margin-top: 5px;">برای انتخاب عکس کلیک کنید</div>
                         </label>
                         <div id="imgPreview">
                             <img id="imgPreviewTag" alt="پیش‌نمایش">
                             <div style="flex: 1; font-size: 0.8rem;" id="imgSizeInfo"></div>
-                            <button type="button" id="removeImgBtn" class="btn-danger btn-sm">حذف عکس</button>
+                            <button type="button" id="removeImgBtn" class="btn-danger btn-sm">حذف</button>
                         </div>
                     </div>
 
@@ -135,10 +149,7 @@
                         <textarea id="newsContent" required></textarea>
                     </div>
 
-                    <div style="display: flex; gap: 10px;">
-                        <button type="submit" id="submitBtn">ثبت و انتشار خبر</button>
-                        <button type="button" id="cancelEditBtn" class="btn-danger hidden" style="width: 30%;">لغو ویرایش</button>
-                    </div>
+                    <button type="submit" id="submitBtn">ثبت و انتشار خبر</button>
                 </form>
             </div>
         </div>
@@ -146,11 +157,7 @@
         <!-- تب لیست اخبار -->
         <div id="tab-list" class="tab-content">
             <div class="card">
-                <h1>📋 مدیریت اخبار</h1>
-                <div class="search-bar">
-                    <input type="text" id="searchNewsAdmin" placeholder="جستجو در عنوان اخبار...">
-                    <button id="refreshListBtn" class="btn-sm" style="background: rgba(255,255,255,0.1);">🔄</button>
-                </div>
+                <h1>📋 لیست اخبار دستی</h1>
                 <div id="newsListContainer">در حال بارگذاری...</div>
             </div>
         </div>
@@ -183,391 +190,409 @@
 </div>
 
 <script>
-    // ==========================================
-    // ⚠️ تنظیمات
-    // ==========================================
-    const SB_URL = 'https://kemwkxuwhqgqqfyfpbmm.supabase.co';
-    const SB_KEY = 'sb_publishable_OsUd9T9GvvY6rvyycxlQSA_xFazoXBe'; 
-    const BASE_URL = `${SB_URL}/functions/v1`;
-    const ADMIN_LOGIN_URL = `${BASE_URL}/admin-login`;
-    const MANUAL_NEWS_URL = `${BASE_URL}/manual-news`;
-    const ADMIN_USERS_URL = `${BASE_URL}/admin-users`;
+'use strict';
 
-    const supabaseClient = window.supabase.createClient(SB_URL, SB_KEY);
+// Supabase configuration: the publishable key is intended for browser use.
+const SUPABASE_ANON_KEY = 'sb_publishable_OsUd9T9GvvY6rvyycxlQSA_xFazoXBe';
+const BASE_URL = 'https://kemwkxuwhqgqqfyfpbmm.supabase.co/functions/v1';
+const ADMIN_LOGIN_URL = `${BASE_URL}/admin-login`;
+const MANUAL_NEWS_URL = `${BASE_URL}/manual-news`;
+const ADMIN_USERS_URL = `${BASE_URL}/admin-users`;
 
-    let adminToken = null;
-    let anImageUrl = '';
-    let allNewsList = [];
+let adminToken = null; // Keep the admin token in memory only; never put it in localStorage.
+let anImageBase64 = '';
+const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 
-    function showToast(msg, isError = false) {
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.style.borderColor = isError ? 'var(--danger)' : 'var(--success)';
-        toast.textContent = msg;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+const $ = (id) => document.getElementById(id);
+
+function showToast(message, isError = false) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.setAttribute('role', 'status');
+  toast.style.borderColor = isError ? 'var(--danger)' : 'var(--success)';
+  toast.textContent = String(message);
+  document.body.appendChild(toast);
+  window.setTimeout(() => toast.remove(), 3500);
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[char]);
+}
+
+async function readResponse(res) {
+  const raw = await res.text();
+  let data = {};
+  if (raw) {
+    try { data = JSON.parse(raw); }
+    catch { data = { message: raw.slice(0, 500) }; }
+  }
+  if (!res.ok || (data && typeof data === 'object' && (data.success === false || data.ok === false || data.error))) {
+    if (res.status === 401 || res.status === 403) expireAdminSession();
+    throw new Error(data?.error || data?.message || `خطای سرور (${res.status})`);
+  }
+  return data;
+}
+
+function publicHeaders(json = false) {
+  const headers = { apikey: SUPABASE_ANON_KEY };
+  if (json) headers['Content-Type'] = 'application/json';
+  if (adminToken) headers.Authorization = `Bearer ${adminToken}`;
+  return headers;
+}
+
+async function apiRequest(url, options = {}) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return await readResponse(res);
+  } catch (error) {
+    if (error.name === 'AbortError') throw new Error('مهلت ارتباط با سرور تمام شد. دوباره تلاش کنید.');
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
+function setLoggedIn(isLoggedIn) {
+  $('loginSection').classList.toggle('hidden', isLoggedIn);
+  $('adminSection').classList.toggle('hidden', !isLoggedIn);
+  if (!isLoggedIn) {
+    $('adminPassword').value = '';
+    anImageBase64 = '';
+    clearImagePreview();
+  }
+}
+
+function expireAdminSession() {
+  if (!adminToken) return;
+  adminToken = null;
+  setLoggedIn(false);
+  showToast('نشست مدیریت منقضی شده است؛ دوباره وارد شوید.', true);
+}
+
+// Admin login
+$('loginForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = $('loginBtn');
+  const password = $('adminPassword').value;
+  if (!password) return showToast('رمز عبور را وارد کنید.', true);
+  button.disabled = true;
+  button.textContent = 'در حال بررسی...';
+  try {
+    const data = await apiRequest(ADMIN_LOGIN_URL, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const token = data.token || data.access_token;
+    if (typeof token !== 'string' || !token.trim()) {
+      throw new Error('سرور ورود موفق را اعلام کرد اما توکن مدیریتی برنگرداند.');
     }
+    adminToken = token;
+    setLoggedIn(true);
+    showToast('ورود موفق بود.');
+    await Promise.allSettled([loadNewsList(), loadUsers()]);
+  } catch (error) {
+    showToast(`خطا در ورود: ${error.message}`, true);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'ورود به پنل';
+  }
+});
 
-    // ۱. ورود
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('loginBtn');
-        const pass = document.getElementById('adminPassword').value;
-        btn.textContent = 'در حال بررسی...';
-        btn.disabled = true;
-
-        try {
-            const res = await fetch(ADMIN_LOGIN_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
-                body: JSON.stringify({ password: pass })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'رمز عبور اشتباه است');
-
-            adminToken = data.token;
-            showToast('✅ ورود موفق!');
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('adminSection').classList.remove('hidden');
-            document.getElementById('adminPassword').value = ''; 
-            
-            loadNewsList();
-            loadUsers();
-        } catch (error) {
-            showToast('❌ ' + error.message, true);
-        } finally {
-            btn.textContent = 'ورود به پنل';
-            btn.disabled = false;
-        }
+// Tabs
+ document.querySelectorAll('.tab-btn').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach((item) => item.classList.toggle('active', item === button));
+    document.querySelectorAll('.tab-content').forEach((section) => {
+      section.classList.toggle('active', section.id === `tab-${button.dataset.tab}`);
     });
+    if (button.dataset.tab === 'list') loadNewsList();
+    if (button.dataset.tab === 'users') loadUsers();
+  });
+});
 
-    // ۲. تب‌ها
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-        });
-    });
+// Image upload: keep the original file input in the DOM so it remains usable after every selection.
+$('imageFile').addEventListener('change', async (event) => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    showToast('فقط تصویر JPG، PNG یا WEBP قابل انتخاب است.', true);
+    event.target.value = '';
+    return;
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    showToast('حجم عکس باید کمتر از ۱۲ مگابایت باشد.', true);
+    event.target.value = '';
+    return;
+  }
 
-    // ۳. آپلود عکس
-    document.getElementById('imageFile').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+  const uploadText = $('uploadText');
+  const zone = $('uploadZone');
+  zone.classList.add('processing');
+  if (uploadText) uploadText.textContent = '⏳ در حال آماده‌سازی عکس...';
+  try {
+    anImageBase64 = await compressImage(file);
+    $('imgPreviewTag').src = anImageBase64;
+    $('imgSizeInfo').textContent = `حجم نهایی: ${Math.round(anImageBase64.length * 0.75 / 1024).toLocaleString('fa-IR')} کیلوبایت`;
+    $('imgPreview').style.display = 'flex';
+    zone.style.display = 'none';
+  } catch (error) {
+    anImageBase64 = '';
+    event.target.value = '';
+    showToast(`خطا در پردازش عکس: ${error.message}`, true);
+    if (uploadText) uploadText.textContent = 'برای انتخاب عکس کلیک کنید';
+  } finally {
+    zone.classList.remove('processing');
+  }
+});
 
-        const zone = document.getElementById('uploadZone');
-        const originalHTML = zone.innerHTML;
-        zone.innerHTML = '<div style="padding: 10px;">⏳ در حال آپلود در کلود...</div>';
-
-        try {
-            const base64 = await compressImage(file);
-            const resBlob = await fetch(base64);
-            const blob = await resBlob.blob();
-            
-            const fileName = `news_${Date.now()}_${Math.random().toString(36).substring(7)}.jpeg`;
-            
-            const { data, error } = await supabaseClient.storage
-                .from('news-images')
-                .upload(fileName, blob, { contentType: 'image/jpeg' });
-
-            if (error) throw error;
-
-            const { data: publicUrlData } = supabaseClient.storage.from('news-images').getPublicUrl(fileName);
-            anImageUrl = publicUrlData.publicUrl;
-
-            document.getElementById('imgPreviewTag').src = anImageUrl;
-            document.getElementById('imgPreview').style.display = 'flex';
-            zone.style.display = 'none';
-            
-            const bytes = Math.round(blob.size);
-            document.getElementById('imgSizeInfo').textContent = `حجم: ${(bytes / 1024).toFixed(0)} کیلوبایت | آپلود شد ✅`;
-        } catch (err) {
-            showToast('❌ خطا در آپلود: ' + err.message, true);
-            zone.innerHTML = originalHTML;
-            e.target.value = '';
-        }
-    });
-
-    function compressImage(file, maxW = 1280, maxH = 1280, quality = 0.82) {
-        return new Promise((resolve, reject) => {
-            if (!file.type.startsWith('image/')) return reject(new Error('فایل باید عکس باشد'));
-            const reader = new FileReader();
-            reader.onload = () => {
-                const img = new Image();
-                img.onload = () => {
-                    let { width, height } = img;
-                    if (width > maxW) { height = Math.round(height * maxW / width); width = maxW; }
-                    if (height > maxH) { width = Math.round(width * maxH / height); height = maxH; }
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width; canvas.height = height;
-                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', quality));
-                };
-                img.src = reader.result;
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    document.getElementById('removeImgBtn').addEventListener('click', () => {
-        anImageUrl = '';
-        document.getElementById('imgPreview').style.display = 'none';
-        document.getElementById('uploadZone').style.display = 'block';
-        document.getElementById('imageFile').value = '';
-    });
-
-    // ۴. ثبت و ویرایش خبر
-    document.getElementById('addNewsForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!adminToken) return showToast('نشست منقضی شده است', true);
-
-        const btn = document.getElementById('submitBtn');
-        const editId = document.getElementById('editNewsId').value;
-        const isEdit = !!editId;
-
-        btn.textContent = '⏳ در حال ذخیره...';
-        btn.disabled = true;
-
-        const payload = {
-            title: document.getElementById('newsTitle').value.trim(),
-            source: document.getElementById('newsSource').value.trim(),
-            category: document.getElementById('newsCategory').value,
-            is_featured: document.getElementById('newsFeatured').value === 'true',
-            content: document.getElementById('newsContent').value.trim(),
-            image: anImageUrl,
-            published: true
-        };
-
-        try {
-            let url = MANUAL_NEWS_URL;
-            let method = 'POST';
-            
-            if (isEdit) {
-                url = `${MANUAL_NEWS_URL}?id=${editId}`;
-                method = 'PUT';
-            }
-
-            const res = await fetch(url, {
-                method: method,
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'apikey': SB_KEY,
-                    'Authorization': `Bearer ${adminToken}`
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || 'خطا در ذخیره خبر');
-            }
-
-            showToast(isEdit ? '✅ خبر ویرایش شد!' : '✅ خبر با موفقیت ثبت شد!');
-            resetForm();
-            loadNewsList();
-
-        } catch (error) {
-            showToast('❌ ' + error.message, true);
-        } finally {
-            btn.textContent = 'ثبت و انتشار خبر';
-            btn.disabled = false;
-        }
-    });
-
-    // ۵. لیست اخبار
-    async function loadNewsList() {
-        const container = document.getElementById('newsListContainer');
-        container.innerHTML = 'در حال بارگذاری...';
-
-        try {
-            const res = await fetch(`${MANUAL_NEWS_URL}?all=1`, { headers: { 'apikey': SB_KEY } });
-            allNewsList = await res.json();
-
-            if (!Array.isArray(allNewsList) || allNewsList.length === 0) {
-                return container.innerHTML = '<p style="color:var(--text-muted); text-align:center;">هیچ خبری یافت نشد.</p>';
-            }
-
-            renderNewsList(allNewsList);
-        } catch (e) {
-            container.innerHTML = '<p style="color:var(--danger); text-align:center;">خطا در دریافت.</p>';
-        }
-    }
-
-    function renderNewsList(list) {
-        const container = document.getElementById('newsListContainer');
-        if (list.length === 0) {
-            container.innerHTML = '<p style="color:var(--text-muted); text-align:center;">موردی یافت نشد.</p>';
-            return;
-        }
-
-        container.innerHTML = list.map(n => `
-            <div class="list-item">
-                <div class="info">
-                    <div class="title">${n.title}</div>
-                    <div class="meta">
-                        <span>📂 ${n.category || 'عمومی'}</span>
-                        <span style="color:${n.is_featured ? 'var(--gold)' : 'var(--text-muted)'}">${n.is_featured ? '⭐ ویژه' : 'عادی'}</span>
-                    </div>
-                </div>
-                <div class="actions">
-                    <button class="btn-sm btn-gold" onclick="toggleFeatured('${n._id || n.id}', ${!n.is_featured})" title="تغییر وضعیت ویژه">⭐</button>
-                    <button class="btn-sm" onclick="editNews('${n._id || n.id}')">✏️ ویرایش</button>
-                    <button class="btn-sm btn-danger" onclick="deleteNews('${n._id || n.id}')">🗑 حذف</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    document.getElementById('searchNewsAdmin').addEventListener('input', (e) => {
-        const q = e.target.value.trim().toLowerCase();
-        const filtered = allNewsList.filter(n => n.title.toLowerCase().includes(q));
-        renderNewsList(filtered);
-    });
-
-    document.getElementById('refreshListBtn').onclick = loadNewsList;
-
-    window.editNews = (id) => {
-        const news = allNewsList.find(n => (n._id || n.id) == id);
-        if (!news) return;
-
-        document.getElementById('formTitle').textContent = '✏️ ویرایش خبر';
-        document.getElementById('editNewsId').value = id;
-        document.getElementById('newsTitle').value = news.title;
-        document.getElementById('newsSource').value = news.source || 'خبر دستی';
-        document.getElementById('newsCategory').value = news.category || 'عمومی';
-        document.getElementById('newsFeatured').value = news.is_featured ? 'true' : 'false';
-        document.getElementById('newsContent').value = news.content || news.plain || '';
-        
-        if (news.image) {
-            anImageUrl = news.image;
-            document.getElementById('imgPreviewTag').src = news.image;
-            document.getElementById('imgPreview').style.display = 'flex';
-            document.getElementById('uploadZone').style.display = 'none';
-        } else {
-            document.getElementById('removeImgBtn').click();
-        }
-
-        document.getElementById('submitBtn').textContent = '💾 ذخیره تغییرات';
-        document.getElementById('cancelEditBtn').classList.remove('hidden');
-        
-        document.querySelector('[data-tab="add"]').click();
+function compressImage(file, maxW = 1280, maxH = 1280, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('خواندن فایل عکس ناموفق بود.'));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error('فایل انتخاب‌شده تصویر معتبری نیست.'));
+      image.onload = () => {
+        let { width, height } = image;
+        if (!width || !height) return reject(new Error('ابعاد عکس قابل تشخیص نیست.'));
+        const scale = Math.min(1, maxW / width, maxH / height);
+        width = Math.max(1, Math.round(width * scale));
+        height = Math.max(1, Math.round(height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+        if (!context) return reject(new Error('مرورگر امکان پردازش عکس را فراهم نکرد.'));
+        context.drawImage(image, 0, 0, width, height);
+        try { resolve(canvas.toDataURL('image/jpeg', quality)); }
+        catch { reject(new Error('تبدیل عکس انجام نشد.')); }
+      };
+      image.src = String(reader.result);
     };
+    reader.readAsDataURL(file);
+  });
+}
 
-    document.getElementById('cancelEditBtn').onclick = resetForm;
+function clearImagePreview() {
+  $('imgPreview').style.display = 'none';
+  $('imgPreviewTag').removeAttribute('src');
+  $('imgSizeInfo').textContent = '';
+  $('uploadZone').style.display = 'block';
+  const uploadText = $('uploadText');
+  if (uploadText) uploadText.textContent = 'برای انتخاب عکس کلیک کنید';
+  $('imageFile').value = '';
+}
 
-    function resetForm() {
-        document.getElementById('addNewsForm').reset();
-        document.getElementById('formTitle').textContent = '📰 ثبت خبر جدید';
-        document.getElementById('editNewsId').value = '';
-        document.getElementById('submitBtn').textContent = 'ثبت و انتشار خبر';
-        document.getElementById('cancelEditBtn').classList.add('hidden');
-        document.getElementById('removeImgBtn').click();
+$('removeImgBtn').addEventListener('click', () => {
+  anImageBase64 = '';
+  clearImagePreview();
+});
+
+// Create/publish a manual news item.
+$('addNewsForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!adminToken) return showToast('نشست مدیریت معتبر نیست؛ دوباره وارد شوید.', true);
+
+  const title = $('newsTitle').value.trim();
+  const content = $('newsContent').value.trim();
+  if (!title || !content) return showToast('عنوان و متن خبر الزامی است.', true);
+
+  const button = $('submitBtn');
+  button.disabled = true;
+  button.textContent = '⏳ در حال ثبت...';
+  const payload = {
+    title,
+    source: $('newsSource').value.trim() || 'خبر دستی',
+    category: $('newsCategory').value,
+    is_featured: $('newsFeatured').value === 'true',
+    content,
+    image: anImageBase64,
+    published: true
+  };
+
+  try {
+    await apiRequest(MANUAL_NEWS_URL, {
+      method: 'POST',
+      headers: publicHeaders(true),
+      body: JSON.stringify(payload)
+    });
+    showToast('خبر با موفقیت ثبت شد.');
+    $('addNewsForm').reset();
+    anImageBase64 = '';
+    clearImagePreview();
+    await loadNewsList();
+  } catch (error) {
+    showToast(`ثبت خبر ناموفق بود: ${error.message}`, true);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'ثبت و انتشار خبر';
+  }
+});
+
+function unwrapArray(data, key) {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data[key])) return data[key];
+  if (data && Array.isArray(data.data)) return data.data;
+  return [];
+}
+
+async function loadNewsList() {
+  const container = $('newsListContainer');
+  if (!adminToken) return;
+  container.classList.remove('error-state');
+  container.textContent = 'در حال بارگذاری...';
+  try {
+    const data = await apiRequest(`${MANUAL_NEWS_URL}?all=1`, { headers: publicHeaders() });
+    const news = unwrapArray(data, 'news');
+    container.replaceChildren();
+    if (!news.length) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'هیچ خبر دستی ثبت نشده است.';
+      container.appendChild(empty);
+      return;
+    }
+    news.forEach((item) => {
+      const row = document.createElement('div');
+      row.className = 'list-item';
+      const info = document.createElement('div');
+      const title = document.createElement('div');
+      title.className = 'news-list-title';
+      title.textContent = item.title || 'بدون عنوان';
+      const state = document.createElement('div');
+      state.className = 'news-list-state';
+      state.textContent = item.is_featured === true || item.is_featured === 'true' ? '⭐ خبر ویژه' : 'خبر عادی';
+      info.append(title, state);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'btn-danger btn-sm delete-news-btn';
+      remove.textContent = 'حذف';
+      remove.dataset.id = String(item._id ?? item.id ?? '');
+      remove.disabled = !remove.dataset.id;
+      remove.addEventListener('click', () => deleteNews(remove.dataset.id, remove));
+      row.append(info, remove);
+      container.appendChild(row);
+    });
+  } catch (error) {
+    container.textContent = `خطا در دریافت اخبار: ${error.message}`;
+    container.classList.add('error-state');
+  }
+}
+
+async function deleteNews(id, button) {
+  if (!adminToken) return showToast('نشست مدیریت معتبر نیست.', true);
+  if (!id) return showToast('شناسه خبر در پاسخ سرور موجود نیست.', true);
+  if (!window.confirm('این خبر حذف شود؟')) return;
+  if (button) button.disabled = true;
+  try {
+    await apiRequest(`${MANUAL_NEWS_URL}?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: publicHeaders()
+    });
+    showToast('خبر حذف شد.');
+    await loadNewsList();
+  } catch (error) {
+    showToast(`حذف خبر ناموفق بود: ${error.message}`, true);
+    if (button) button.disabled = false;
+  }
+}
+
+function normalizeUser(item) {
+  if (typeof item === 'string') {
+    const email = item.trim();
+    const value = email.replace(/@lreporter\.local$/i, '');
+    return value ? { value, label: email } : null;
+  }
+  if (!item || typeof item !== 'object') return null;
+  const username = String(item.username ?? '').trim();
+  const email = String(item.email ?? '').trim();
+  const rawValue = username || email || String(item.id ?? '').trim();
+  const value = username || email.replace(/@lreporter\.local$/i, '') || rawValue;
+  if (!value) return null;
+  return { value, label: username || email || value };
+}
+
+async function loadUsers() {
+  if (!adminToken) return;
+  const container = $('usersListContainer');
+  const select = $('notifTarget');
+  container.classList.remove('error-state');
+  container.textContent = 'در حال بارگذاری کاربران...';
+  try {
+    const data = await apiRequest(ADMIN_USERS_URL, {
+      method: 'POST',
+      headers: publicHeaders(true),
+      body: JSON.stringify({ action: 'list' })
+    });
+    const users = unwrapArray(data, 'users').map(normalizeUser).filter(Boolean);
+    container.replaceChildren();
+    select.replaceChildren();
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = '📢 همه کاربران';
+    select.appendChild(allOption);
+
+    if (!users.length) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'هنوز کاربری ثبت‌نام نکرده است.';
+      container.appendChild(empty);
+      return;
     }
 
-    window.toggleFeatured = async (id, newStatus) => {
-        try {
-            const res = await fetch(`${MANUAL_NEWS_URL}?id=${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': `Bearer ${adminToken}` },
-                body: JSON.stringify({ is_featured: newStatus })
-            });
-            if(res.ok) {
-                showToast('وضعیت ویژه تغییر کرد');
-                loadNewsList();
-            }
-        } catch (e) { showToast('خطا در تغییر وضعیت', true); }
-    };
+    users.forEach((user) => {
+      const row = document.createElement('div');
+      row.className = 'list-item';
+      row.textContent = `👤 ${user.label}`;
+      container.appendChild(row);
 
-    window.deleteNews = async (id) => {
-        if (!confirm('آیا از حذف این خبر مطمئن هستید؟')) return;
-        try {
-            await fetch(`${MANUAL_NEWS_URL}?id=${id}`, { 
-                method: 'DELETE', 
-                headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${adminToken}` } 
-            });
-            showToast('🗑 خبر حذف شد');
-            loadNewsList();
-        } catch (e) { showToast('خطا در حذف', true); }
-    };
-
-    // ۶. کاربران، پیام و حذف کاربر
-    async function loadUsers() {
-        const container = document.getElementById('usersListContainer');
-        const select = document.getElementById('notifTarget');
-        container.innerHTML = 'در حال بارگذاری...';
-
-        try {
-            const res = await fetch(ADMIN_USERS_URL, {
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
-                body: JSON.stringify({ action: 'list' })
-            });
-            const users = await res.json();
-
-            if (!Array.isArray(users) || users.length === 0) {
-                return container.innerHTML = '<p style="color:var(--text-muted); text-align:center;">هنوز کاربری ثبت‌نام نکرده است.</p>';
-            }
-
-            // نمایش لیست کاربران با دکمه حذف
-            container.innerHTML = users.map(u => `
-                <div class="list-item">
-                    <div>👤 ${u}</div>
-                    <button class="btn-sm btn-danger" onclick="deleteUser('${u}')">حذف کاربر</button>
-                </div>
-            `).join('');
-            
-            select.innerHTML = '<option value="all">📢 همه کاربران</option>' + users.map(u => `<option value="${u}">${u}</option>`).join('');
-        } catch (e) {
-            container.innerHTML = '<p style="color:var(--danger); text-align:center;">خطا در دریافت کاربران.</p>';
-        }
-    }
-
-    // تابع حذف کاربر
-    window.deleteUser = async (username) => {
-        if (!confirm(`آیا از حذف کاربر «${username}» مطمئن هستید؟ این عمل غیرقابل بازگشت است.`)) return;
-        
-        try {
-            const res = await fetch(ADMIN_USERS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': `Bearer ${adminToken}` },
-                body: JSON.stringify({ action: 'delete', username: username })
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'خطا در حذف کاربر');
-
-            showToast('✅ کاربر با موفقیت حذف شد');
-            loadUsers(); // رفرش لیست
-        } catch (e) {
-            showToast('❌ ' + e.message, true);
-        }
-    };
-
-    document.getElementById('sendNotifBtn').addEventListener('click', async () => {
-        const target = document.getElementById('notifTarget').value;
-        const message = document.getElementById('notifMessage').value.trim();
-        if (!message) return showToast('پیام خالی است', true);
-
-        try {
-            await fetch(ADMIN_USERS_URL, {
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
-                body: JSON.stringify({ action: 'notify', target: target, message: message })
-            });
-            showToast('✅ پیام ارسال شد');
-            document.getElementById('notifMessage').value = '';
-        } catch (e) { showToast('خطا در ارسال', true); }
+      const option = document.createElement('option');
+      option.value = user.value;
+      option.textContent = user.label;
+      select.appendChild(option);
     });
+  } catch (error) {
+    container.textContent = `خطا در دریافت کاربران: ${error.message}`;
+    container.classList.add('error-state');
+  }
+}
 
-    // ۷. خروج
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        adminToken = null;
-        document.getElementById('adminPassword').value = '';
-        document.getElementById('loginSection').classList.remove('hidden');
-        document.getElementById('adminSection').classList.add('hidden');
-        showToast('از حساب خارج شدید');
+$('sendNotifBtn').addEventListener('click', async () => {
+  if (!adminToken) return showToast('نشست مدیریت معتبر نیست؛ دوباره وارد شوید.', true);
+  const target = $('notifTarget').value;
+  const message = $('notifMessage').value.trim();
+  if (!message) return showToast('متن پیام را وارد کنید.', true);
+
+  const button = $('sendNotifBtn');
+  button.disabled = true;
+  button.textContent = 'در حال ارسال...';
+  try {
+    await apiRequest(ADMIN_USERS_URL, {
+      method: 'POST',
+      headers: publicHeaders(true),
+      body: JSON.stringify({ action: 'notify', target, message })
     });
+    showToast('پیام با موفقیت ارسال شد.');
+    $('notifMessage').value = '';
+  } catch (error) {
+    showToast(`ارسال پیام ناموفق بود: ${error.message}`, true);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'ارسال پیام';
+  }
+});
+
+$('logoutBtn').addEventListener('click', () => {
+  adminToken = null;
+  setLoggedIn(false);
+  showToast('از پنل خارج شدید.');
+});
+
 </script>
 
 </body>
