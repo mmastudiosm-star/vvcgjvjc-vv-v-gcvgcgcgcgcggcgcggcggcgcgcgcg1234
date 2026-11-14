@@ -87,7 +87,7 @@
             <div class="card">
                 <h1 id="formTitle">📰 ثبت خبر جدید</h1>
                 <form id="addNewsForm">
-                    <input type="hidden" id="editNewsId" value=""> <!-- برای حالت ویرایش -->
+                    <input type="hidden" id="editNewsId" value="">
                     
                     <div class="form-group">
                         <label>عنوان خبر *</label>
@@ -196,8 +196,8 @@
     const supabaseClient = window.supabase.createClient(SB_URL, SB_KEY);
 
     let adminToken = null;
-    let anImageUrl = ''; // لینک عکس آپلود شده
-    let allNewsList = []; // برای جستجو در فرانت‌اند
+    let anImageUrl = '';
+    let allNewsList = [];
 
     function showToast(msg, isError = false) {
         const toast = document.createElement('div');
@@ -251,7 +251,7 @@
         });
     });
 
-    // ۳. آپلود عکس (آپلود در Supabase Storage)
+    // ۳. آپلود عکس
     document.getElementById('imageFile').addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -261,23 +261,18 @@
         zone.innerHTML = '<div style="padding: 10px;">⏳ در حال آپلود در کلود...</div>';
 
         try {
-            // فشرده‌سازی قبل از آپلود برای کاهش حجم
             const base64 = await compressImage(file);
-            
-            // تبدیل Base64 به Blob برای آپلود
             const resBlob = await fetch(base64);
             const blob = await resBlob.blob();
             
             const fileName = `news_${Date.now()}_${Math.random().toString(36).substring(7)}.jpeg`;
             
-            // آپلود به باکتی به اسم news-images (باید در سوپابیس بسازید)
             const { data, error } = await supabaseClient.storage
                 .from('news-images')
                 .upload(fileName, blob, { contentType: 'image/jpeg' });
 
             if (error) throw error;
 
-            // دریافت لینک عمومی
             const { data: publicUrlData } = supabaseClient.storage.from('news-images').getPublicUrl(fileName);
             anImageUrl = publicUrlData.publicUrl;
 
@@ -350,7 +345,7 @@
             
             if (isEdit) {
                 url = `${MANUAL_NEWS_URL}?id=${editId}`;
-                method = 'PUT'; // فرض بر اینکه فانکشن شما از PUT پشتیبانی میکند
+                method = 'PUT';
             }
 
             const res = await fetch(url, {
@@ -380,7 +375,7 @@
         }
     });
 
-    // ۵. لیست اخبار، ویرایش و حذف
+    // ۵. لیست اخبار
     async function loadNewsList() {
         const container = document.getElementById('newsListContainer');
         container.innerHTML = 'در حال بارگذاری...';
@@ -496,7 +491,7 @@
         } catch (e) { showToast('خطا در حذف', true); }
     };
 
-    // ۶. کاربران و پیام
+    // ۶. کاربران، پیام و حذف کاربر
     async function loadUsers() {
         const container = document.getElementById('usersListContainer');
         const select = document.getElementById('notifTarget');
@@ -514,12 +509,40 @@
                 return container.innerHTML = '<p style="color:var(--text-muted); text-align:center;">هنوز کاربری ثبت‌نام نکرده است.</p>';
             }
 
-            container.innerHTML = users.map(u => `<div class="list-item">👤 ${u}</div>`).join('');
+            // نمایش لیست کاربران با دکمه حذف
+            container.innerHTML = users.map(u => `
+                <div class="list-item">
+                    <div>👤 ${u}</div>
+                    <button class="btn-sm btn-danger" onclick="deleteUser('${u}')">حذف کاربر</button>
+                </div>
+            `).join('');
+            
             select.innerHTML = '<option value="all">📢 همه کاربران</option>' + users.map(u => `<option value="${u}">${u}</option>`).join('');
         } catch (e) {
             container.innerHTML = '<p style="color:var(--danger); text-align:center;">خطا در دریافت کاربران.</p>';
         }
     }
+
+    // تابع حذف کاربر
+    window.deleteUser = async (username) => {
+        if (!confirm(`آیا از حذف کاربر «${username}» مطمئن هستید؟ این عمل غیرقابل بازگشت است.`)) return;
+        
+        try {
+            const res = await fetch(ADMIN_USERS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': `Bearer ${adminToken}` },
+                body: JSON.stringify({ action: 'delete', username: username })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'خطا در حذف کاربر');
+
+            showToast('✅ کاربر با موفقیت حذف شد');
+            loadUsers(); // رفرش لیست
+        } catch (e) {
+            showToast('❌ ' + e.message, true);
+        }
+    };
 
     document.getElementById('sendNotifBtn').addEventListener('click', async () => {
         const target = document.getElementById('notifTarget').value;
