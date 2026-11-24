@@ -250,6 +250,23 @@ function escapeHtml(value) {
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[char]);
 }
+function flagIsTrue(value) {
+  return value === true || value === 1 || (typeof value === 'string' && /^(true|1|yes|on)$/i.test(value.trim()));
+}
+function canonicalNewsType(item) {
+  if (!item || typeof item !== 'object') return 'simple';
+  const rawValues = [item.news_type, item.newsType, item.type, item.kind, item.news_kind, item.priority_type];
+  for (const raw of rawValues) {
+    if (raw == null || raw === '') continue;
+    const value = String(raw).trim().toLowerCase().replace(/[ـ\s_-]+/g, '');
+    if (['featured','special','highlight','breaking','topnews','خبر ویژه','ویژه','خبرمهم'].includes(value) || value.includes('ویژه')) return 'featured';
+    if (['golden','gold','goldnews','goldennews','premium','خبر طلایی','طلایی'].includes(value) || value.includes('طلایی')) return 'golden';
+  }
+  // Positive legacy flags must override a database default such as news_type='simple'.
+  if ([item.is_featured, item.isFeatured, item.featured, item.is_special, item.special].some(flagIsTrue)) return 'featured';
+  if ([item.is_golden, item.isGolden, item.is_gold, item.isGold, item.golden, item.gold].some(flagIsTrue)) return 'golden';
+  return 'simple';
+}
 
 async function readResponse(res) {
   const raw = await res.text();
@@ -473,11 +490,18 @@ $('addNewsForm').addEventListener('submit', async (event) => {
       headers: publicHeaders(true),
       body: JSON.stringify(payload)
     });
-    showToast('خبر با موفقیت ثبت شد.');
     $('addNewsForm').reset();
     anImageBase64 = '';
     clearImagePreview();
-    await loadNewsList();
+    const savedItems = await loadNewsList();
+    const savedItem = savedItems.find((item) => String(item.title || '').trim() === title);
+    if (!savedItem) {
+      showToast('درخواست ثبت ارسال شد، اما خبر در فهرست برگشتی سرور پیدا نشد؛ پاسخ تابع manual-news باید بررسی شود.', true);
+    } else if (canonicalNewsType(savedItem) !== type) {
+      showToast('خبر ذخیره شده، اما سرور نوع خبر را برنگردانده است. تابع manual-news یا ستون‌های دیتابیس باید اصلاح شود؛ فعلاً نوع خبر روی صفحه قابل تشخیص نیست.', true);
+    } else {
+      showToast(type === 'featured' ? '⭐ خبر ویژه ذخیره و تأیید شد.' : (type === 'golden' ? '✦ خبر طلایی ذخیره و تأیید شد.' : 'خبر ساده ذخیره و تأیید شد.'));
+    }
   } catch (error) {
     showToast(`ثبت خبر ناموفق بود: ${error.message}`, true);
   } finally {
@@ -507,7 +531,7 @@ async function loadNewsList() {
       empty.className = 'empty-state';
       empty.textContent = 'هیچ خبر دستی ثبت نشده است.';
       container.appendChild(empty);
-      return;
+      return news;
     }
     news.forEach((item) => {
       const row = document.createElement('div');
@@ -518,7 +542,7 @@ async function loadNewsList() {
       title.textContent = item.title || 'بدون عنوان';
       const state = document.createElement('div');
       state.className = 'news-list-state';
-      const rawType = String(item.news_type || (item.is_golden ? 'golden' : (item.is_featured ? 'featured' : 'simple'))).toLowerCase();
+      const rawType = canonicalNewsType(item);
       const typeLabel = rawType === 'featured' ? '⭐ خبر ویژه' : (rawType === 'golden' ? '✦ خبر طلایی' : 'خبر ساده');
       const expiry = item.expires_at || item.expiresAt;
       const expiryDate = expiry ? new Date(expiry) : null;
@@ -547,9 +571,11 @@ async function loadNewsList() {
       row.append(info, remove);
       container.appendChild(row);
     });
+    return news;
   } catch (error) {
     container.textContent = `خطا در دریافت اخبار: ${error.message}`;
     container.classList.add('error-state');
+    return [];
   }
 }
 
