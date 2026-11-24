@@ -146,9 +146,9 @@
                         <div class="hint">این لینک فقط در دکمه «مشاهده منبع اصلی» داخل خبر نمایش داده می‌شود؛ لینک اشتراک‌گذاری همچنان داخلی Lreporter است.</div>
                     </div>
                     <div class="form-group">
-                        <label>زمان نمایش خبر (اختیاری)</label>
-                        <input type="datetime-local" id="newsExpiresAt">
-                        <div class="hint">بعد از این زمان، خبر در سایت نمایش داده نمی‌شود. برای حذف واقعی از پایگاه داده، تابع سمت سرور هم باید پاک‌سازی زمان‌دار را پشتیبانی کند.</div>
+                        <label for="newsExpiryHours">مدت نمایش خبر (ساعت، اختیاری)</label>
+                        <input type="number" id="newsExpiryHours" min="1" max="8760" step="1" inputmode="numeric" placeholder="مثلاً ۴۸">
+                        <div class="hint">مثلاً ۴۸ یعنی خبر از زمان انتشار تا ۴۸ ساعت نمایش داده می‌شود. این قسمت را خالی بگذارید تا خبر بدون زمان انقضا منتشر شود.</div>
                     </div>
 
                     <div class="form-group">
@@ -233,7 +233,7 @@ let anImageBase64 = '';
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 
 const $ = (id) => document.getElementById(id);
-$('newsExpiresAt').min = new Date(Date.now() + 60_000).toISOString().slice(0,16);
+// The news expiry is configured as a whole-hour duration in the form.
 
 function showToast(message, isError = false) {
   const toast = document.createElement('div');
@@ -442,13 +442,14 @@ $('addNewsForm').addEventListener('submit', async (event) => {
     } catch (error) { return showToast(error.message || 'لینک منبع معتبر نیست.', true); }
   }
   let expiresAt = null;
-  const expiryInput = $('newsExpiresAt').value;
-  if (expiryInput) {
-    const expiryDate = new Date(expiryInput);
-    if (!Number.isFinite(expiryDate.getTime()) || expiryDate.getTime() <= Date.now()) {
-      return showToast('زمان پایان نمایش باید در آینده باشد.', true);
+  const expiryHoursRaw = $('newsExpiryHours').value.trim();
+  let expiryHours = null;
+  if (expiryHoursRaw !== '') {
+    expiryHours = Number(expiryHoursRaw);
+    if (!Number.isInteger(expiryHours) || expiryHours < 1 || expiryHours > 8760) {
+      return showToast('مدت نمایش باید عدد صحیح بین ۱ تا ۸۷۶۰ ساعت باشد.', true);
     }
-    expiresAt = expiryDate.toISOString();
+    expiresAt = new Date(Date.now() + expiryHours * 60 * 60 * 1000).toISOString();
   }
   const payload = {
     title,
@@ -526,7 +527,10 @@ async function loadNewsList() {
       if (expiryDate) {
         const expiryText = document.createElement('div');
         expiryText.className = 'news-list-state';
-        expiryText.textContent = Number.isNaN(expiryDate.getTime()) ? '' : `پایان نمایش: ${expiryDate.toLocaleString('fa-IR')}`;
+        if (Number.isFinite(expiryDate.getTime())) {
+          const remainingHours = Math.max(0, Math.ceil((expiryDate.getTime() - Date.now()) / (60 * 60 * 1000)));
+          expiryText.textContent = expired ? 'مدت نمایش: پایان‌یافته' : `زمان باقی‌مانده: ${remainingHours.toLocaleString('fa-IR')} ساعت`;
+        }
         info.append(title, state, expiryText);
       } else info.append(title, state);
       const chip = document.createElement('span');
