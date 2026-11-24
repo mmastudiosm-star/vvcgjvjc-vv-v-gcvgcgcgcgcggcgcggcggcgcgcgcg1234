@@ -58,6 +58,15 @@
         .list-item { gap: 14px; }
         .list-item > div { min-width: 0; }
         .delete-news-btn { flex: 0 0 auto; }
+        .hint { color:var(--text-muted); font-size:.78rem; line-height:1.8; margin-top:5px; }
+        .notice-item { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:13px; border:1px solid rgba(255,255,255,.08); border-radius:12px; background:rgba(0,0,0,.18); margin-bottom:9px; }
+        .notice-content { min-width:0; overflow-wrap:anywhere; }
+        .notice-meta { display:block; color:var(--text-muted); font-size:.75rem; margin-top:4px; }
+        .type-chip { display:inline-block; border-radius:20px; padding:3px 9px; font-size:.72rem; font-weight:800; margin-top:6px; }
+        .type-simple { background:rgba(59,130,246,.15); color:#93c5fd; }
+        .type-golden { background:rgba(245,158,11,.18); color:#fbbf24; }
+        .type-featured { background:rgba(245,158,11,.28); color:#fde68a; }
+        @media (max-width:700px) { .notice-item { align-items:stretch; flex-direction:column; } .notice-item button { align-self:flex-start; } }
         input, textarea, select { min-width: 0; }
         button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         @media (max-width: 700px) {
@@ -122,12 +131,24 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>اهمیت</label>
-                            <select id="newsFeatured" style="color: var(--gold); font-weight: bold;">
-                                <option value="false" style="color: var(--text);">عادی</option>
-                                <option value="true">⭐ ویژه (بالای سایت)</option>
+                            <label>نوع خبر دستی</label>
+                            <select id="newsType" style="font-weight: bold;">
+                                <option value="simple">خبر ساده</option>
+                                <option value="golden">✦ خبر طلایی (حاشیه هاشوری)</option>
+                                <option value="featured">⭐ خبر ویژه (کادر بالای سایت)</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>لینک منبع اصلی خبر (اختیاری)</label>
+                        <input type="url" id="newsSourceUrl" placeholder="https://example.com/news/article">
+                        <div class="hint">این لینک فقط در دکمه «مشاهده منبع اصلی» داخل خبر نمایش داده می‌شود؛ لینک اشتراک‌گذاری همچنان داخلی Lreporter است.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>زمان نمایش خبر (اختیاری)</label>
+                        <input type="datetime-local" id="newsExpiresAt">
+                        <div class="hint">بعد از این زمان، خبر در سایت نمایش داده نمی‌شود. برای حذف واقعی از پایگاه داده، تابع سمت سرور هم باید پاک‌سازی زمان‌دار را پشتیبانی کند.</div>
                     </div>
 
                     <div class="form-group">
@@ -183,6 +204,14 @@
                 <h1>👥 لیست کاربران</h1>
                 <div id="usersListContainer">در حال بارگذاری...</div>
             </div>
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px;">
+                    <h1 style="margin:0;color:var(--accent);">🗑️ مدیریت اعلان‌ها</h1>
+                    <button type="button" id="refreshNotificationsBtn" class="btn-sm" style="width:auto;">به‌روزرسانی</button>
+                </div>
+                <p class="hint" style="margin-bottom:12px;">اعلان‌های ارسال‌شده را می‌توانید از این قسمت حذف کنید.</p>
+                <div id="adminNotificationsList">برای دریافت اعلان‌ها وارد شوید.</div>
+            </div>
         </div>
 
         <button id="logoutBtn" class="btn-danger" style="margin-top: 10px;">خروج از حساب</button>
@@ -204,6 +233,7 @@ let anImageBase64 = '';
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 
 const $ = (id) => document.getElementById(id);
+$('newsExpiresAt').min = new Date(Date.now() + 60_000).toISOString().slice(0,16);
 
 function showToast(message, isError = false) {
   const toast = document.createElement('div');
@@ -294,7 +324,7 @@ $('loginForm').addEventListener('submit', async (event) => {
     adminToken = token;
     setLoggedIn(true);
     showToast('ورود موفق بود.');
-    await Promise.allSettled([loadNewsList(), loadUsers()]);
+    await Promise.allSettled([loadNewsList(), loadUsers(), loadAdminNotifications()]);
   } catch (error) {
     showToast(`خطا در ورود: ${error.message}`, true);
   } finally {
@@ -311,7 +341,7 @@ $('loginForm').addEventListener('submit', async (event) => {
       section.classList.toggle('active', section.id === `tab-${button.dataset.tab}`);
     });
     if (button.dataset.tab === 'list') loadNewsList();
-    if (button.dataset.tab === 'users') loadUsers();
+    if (button.dataset.tab === 'users') { loadUsers(); loadAdminNotifications(); }
   });
 });
 
@@ -403,17 +433,38 @@ $('addNewsForm').addEventListener('submit', async (event) => {
   if (!title || !content) return showToast('عنوان و متن خبر الزامی است.', true);
 
   const button = $('submitBtn');
-  button.disabled = true;
-  button.textContent = '⏳ در حال ثبت...';
+  const type = $('newsType').value;
+  const sourceUrl = $('newsSourceUrl').value.trim();
+  if (sourceUrl) {
+    try {
+      const parsed = new URL(sourceUrl);
+      if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('لینک منبع باید با http یا https شروع شود.');
+    } catch (error) { return showToast(error.message || 'لینک منبع معتبر نیست.', true); }
+  }
+  let expiresAt = null;
+  const expiryInput = $('newsExpiresAt').value;
+  if (expiryInput) {
+    const expiryDate = new Date(expiryInput);
+    if (!Number.isFinite(expiryDate.getTime()) || expiryDate.getTime() <= Date.now()) {
+      return showToast('زمان پایان نمایش باید در آینده باشد.', true);
+    }
+    expiresAt = expiryDate.toISOString();
+  }
   const payload = {
     title,
     source: $('newsSource').value.trim() || 'خبر دستی',
+    source_url: sourceUrl || null,
     category: $('newsCategory').value,
-    is_featured: $('newsFeatured').value === 'true',
+    news_type: type,
+    is_featured: type === 'featured',
+    is_golden: type === 'golden',
+    expires_at: expiresAt,
     content,
     image: anImageBase64,
     published: true
   };
+  button.disabled = true;
+  button.textContent = '⏳ در حال ثبت...';
 
   try {
     await apiRequest(MANUAL_NEWS_URL, {
@@ -466,8 +517,22 @@ async function loadNewsList() {
       title.textContent = item.title || 'بدون عنوان';
       const state = document.createElement('div');
       state.className = 'news-list-state';
-      state.textContent = item.is_featured === true || item.is_featured === 'true' ? '⭐ خبر ویژه' : 'خبر عادی';
-      info.append(title, state);
+      const rawType = String(item.news_type || (item.is_golden ? 'golden' : (item.is_featured ? 'featured' : 'simple'))).toLowerCase();
+      const typeLabel = rawType === 'featured' ? '⭐ خبر ویژه' : (rawType === 'golden' ? '✦ خبر طلایی' : 'خبر ساده');
+      const expiry = item.expires_at || item.expiresAt;
+      const expiryDate = expiry ? new Date(expiry) : null;
+      const expired = Boolean(expiryDate && Number.isFinite(expiryDate.getTime()) && expiryDate.getTime() <= Date.now());
+      state.textContent = expired ? `${typeLabel} • منقضی‌شده` : typeLabel;
+      if (expiryDate) {
+        const expiryText = document.createElement('div');
+        expiryText.className = 'news-list-state';
+        expiryText.textContent = Number.isNaN(expiryDate.getTime()) ? '' : `پایان نمایش: ${expiryDate.toLocaleString('fa-IR')}`;
+        info.append(title, state, expiryText);
+      } else info.append(title, state);
+      const chip = document.createElement('span');
+      chip.className = `type-chip type-${['simple','golden','featured'].includes(rawType) ? rawType : 'simple'}`;
+      chip.textContent = typeLabel;
+      info.appendChild(chip);
       const remove = document.createElement('button');
       remove.type = 'button';
       remove.className = 'btn-danger btn-sm delete-news-btn';
@@ -562,6 +627,62 @@ async function loadUsers() {
   }
 }
 
+async function loadAdminNotifications() {
+  if (!adminToken) return;
+  const container = $('adminNotificationsList');
+  container.classList.remove('error-state');
+  container.textContent = 'در حال دریافت اعلان‌ها...';
+  try {
+    const data = await apiRequest(ADMIN_USERS_URL, {
+      method: 'POST', headers: publicHeaders(true),
+      body: JSON.stringify({ action: 'notifications-list' })
+    });
+    const notifications = unwrapArray(data, 'notifications');
+    container.replaceChildren();
+    if (!notifications.length) {
+      const empty = document.createElement('p'); empty.className = 'empty-state';
+      empty.textContent = 'اعلانی برای نمایش وجود ندارد.'; container.appendChild(empty); return;
+    }
+    notifications.forEach((notification) => {
+      const row = document.createElement('div'); row.className = 'notice-item';
+      const info = document.createElement('div'); info.className = 'notice-content';
+      const message = document.createElement('div'); message.textContent = notification.message || 'بدون متن';
+      const meta = document.createElement('span'); meta.className = 'notice-meta';
+      const created = notification.created_at ? new Date(notification.created_at) : null;
+      meta.textContent = `${notification.target_user === 'all' ? 'همه کاربران' : (notification.target_user || 'گیرنده نامشخص')}${created && !Number.isNaN(created.getTime()) ? ` • ${created.toLocaleString('fa-IR')}` : ''}`;
+      info.append(message, meta);
+      const remove = document.createElement('button'); remove.type = 'button';
+      remove.className = 'btn-danger btn-sm'; remove.textContent = 'حذف اعلان';
+      remove.dataset.id = String(notification.id ?? notification._id ?? '');
+      remove.disabled = !remove.dataset.id;
+      remove.addEventListener('click', () => deleteAdminNotification(remove.dataset.id, remove));
+      row.append(info, remove); container.appendChild(row);
+    });
+  } catch (error) {
+    container.textContent = `دریافت اعلان‌ها ناموفق بود: ${error.message}`;
+    container.classList.add('error-state');
+  }
+}
+
+async function deleteAdminNotification(id, button) {
+  if (!adminToken) return showToast('نشست مدیریت معتبر نیست.', true);
+  if (!id) return showToast('شناسه اعلان در پاسخ سرور موجود نیست.', true);
+  if (!window.confirm('این اعلان حذف شود؟')) return;
+  button.disabled = true;
+  try {
+    await apiRequest(ADMIN_USERS_URL, {
+      method: 'POST', headers: publicHeaders(true),
+      body: JSON.stringify({ action: 'notifications-delete', id })
+    });
+    showToast('اعلان حذف شد.');
+    await loadAdminNotifications();
+  } catch (error) {
+    showToast(`حذف اعلان ناموفق بود: ${error.message}`, true);
+    button.disabled = false;
+  }
+}
+$('refreshNotificationsBtn').addEventListener('click', loadAdminNotifications);
+
 $('sendNotifBtn').addEventListener('click', async () => {
   if (!adminToken) return showToast('نشست مدیریت معتبر نیست؛ دوباره وارد شوید.', true);
   const target = $('notifTarget').value;
@@ -579,6 +700,7 @@ $('sendNotifBtn').addEventListener('click', async () => {
     });
     showToast('پیام با موفقیت ارسال شد.');
     $('notifMessage').value = '';
+    await loadAdminNotifications();
   } catch (error) {
     showToast(`ارسال پیام ناموفق بود: ${error.message}`, true);
   } finally {
